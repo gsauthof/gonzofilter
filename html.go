@@ -1,0 +1,271 @@
+// 2019, Georg Sauthoff <mail@gms.tf>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+package main
+
+import (
+    "bytes"
+    "html"
+    "io"
+)
+
+func unescape_entity(s []byte) []byte {
+    empty := []byte("")
+    space := []byte(" ")
+    switch {
+    case bytes.Equal(s, []byte("&zwnj;")):
+        return empty
+    case bytes.Equal(s, []byte("&nbsp;")):
+        return space
+    default:
+        r := html.UnescapeString(string(s))
+        return []byte(r)
+    }
+}
+
+type replace_entities_writer struct {
+    out io.WriteCloser
+    state int
+    partial_entity []byte
+}
+func new_replace_entities_writer(out io.WriteCloser) *replace_entities_writer {
+    w := new(replace_entities_writer)
+    w.out = out
+    w.partial_entity = make([]byte, 1, max_entity_len)
+    w.partial_entity[0] = byte('&')
+    return w
+}
+func (w *replace_entities_writer) Write(block []byte) (int, error) {
+    const ( OUTSIDE = iota
+            IN_ENTITY
+        )
+    n := len(block)
+    for {
+        if len(block) == 0 {
+            break
+        }
+        switch w.state {
+        case OUTSIDE:
+            i := bytes.IndexByte(block, byte('&'))
+            if i == -1 {
+                if _, err := w.out.Write(block); err != nil {
+                    return 0, err
+                }
+                block = block[:0]
+            } else {
+                if _, err := w.out.Write(block[:i]); err != nil {
+                    return 0, err
+                }
+                block = block[i:]
+                j := bytes.IndexByte(block[1:], byte(';'))
+                if j == -1 {
+                    w.partial_entity = w.partial_entity[:1]
+                    if len(block) < max_entity_len {
+                        w.partial_entity = append(w.partial_entity, block[1:]...)
+                        block = block[:0]
+                        w.state = IN_ENTITY
+                    } else {
+                        block = block[1:]
+                    }
+                } else {
+                    j += 1
+                    s := unescape_entity(block[:j+1])
+                    if _, err := w.out.Write([]byte(s)); err != nil {
+                        return 0, err
+                    }
+                    block = block[j+1:]
+                }
+            }
+        case IN_ENTITY:
+            i := bytes.IndexByte(block, byte(';'))
+            if i == -1 {
+                i = len(block)-1
+            }
+            if len(w.partial_entity) + i < max_entity_len {
+                w.partial_entity = append(w.partial_entity, block[:i+1]...)
+                block = block[i+1:]
+                if w.partial_entity[len(w.partial_entity)-1] == byte(';') {
+                    s := unescape_entity(w.partial_entity)
+                    if _, err := w.out.Write([]byte(s)); err != nil {
+                        return 0, err
+                    }
+                    w.state = OUTSIDE
+                }
+            } else {
+                w.state = OUTSIDE
+            }
+        }
+    }
+    return n, nil
+}
+func (w *replace_entities_writer) Close() error {
+    return w.out.Close()
+}
+
+type remove_tags_writer struct {
+    out io.WriteCloser
+    state int
+    off int
+}
+func new_remove_tags_writer(out io.WriteCloser) *remove_tags_writer {
+    w := new(remove_tags_writer)
+    w.out = out
+    return w
+}
+func (w *remove_tags_writer) Write(block []byte) (int, error) {
+    const ( OUTSIDE = iota
+            IN_TAG
+            FINISH_TAG
+            FINISH_END_STYLE
+            FINISH_END_STYLE2
+            IN_DECL_COMMENT
+            FINISH_COMMENT
+            FINISH_COMMENT2
+            IN_STYLE_SCRIPT
+            IN_STYLE
+            IN_SCRIPT
+            AFTER_STYLE_SCRIPT
+        )
+    n := len(block)
+    space := []byte(" ")
+    yle := []byte("yle")
+    ript := []byte("ript")
+    end_style := []byte("</style>")
+    end_comment := []byte("-->")
+    for {
+        if len(block) == 0 {
+            break
+        }
+        switch w.state {
+        case OUTSIDE:
+            i := bytes.IndexByte(block, byte('<'))
+            if i == -1 {
+                if _, err := w.out.Write(block); err != nil {
+                    return 0, err
+                }
+                block = block[:0]
+            } else {
+                if _, err := w.out.Write(block[:i]); err != nil {
+                    return 0, err
+                }
+                w.state = IN_TAG
+                block = block[i+1:]
+            }
+        case IN_TAG:
+            if block[0] == byte('s') || block[0] == byte('S') {
+                block = block[1:]
+                w.state = IN_STYLE_SCRIPT
+            } else if block[0] == byte('!') {
+                block = block[1:]
+                w.state = IN_DECL_COMMENT
+            } else {
+                w.state = FINISH_TAG
+            }
+        case IN_DECL_COMMENT:
+            if block[0] == byte('-') {
+                w.state = FINISH_COMMENT
+            } else {
+                w.state = FINISH_TAG
+            }
+            block = block[1:]
+        case FINISH_COMMENT:
+            i := bytes.IndexByte(block, byte('-'))
+            if i == -1 {
+                block = block[:0]
+            } else {
+                w.off = 1
+                block = block[i+1:]
+                w.state = FINISH_COMMENT2
+            }
+        case FINISH_COMMENT2:
+            i := imatch_prefix(block, end_comment[w.off:])
+            if i > 0 {
+                w.off += i
+                block = block[i:]
+                if w.off == len(end_comment) {
+                    w.state = OUTSIDE
+                }
+            } else {
+                w.state = FINISH_COMMENT
+            }
+        case FINISH_TAG:
+            i := bytes.IndexByte(block, byte('>'))
+            if i == -1 {
+                block = block[:0]
+            } else {
+                w.state = OUTSIDE
+                block = block[i+1:]
+                if _, err := w.out.Write(space); err != nil {
+                    return 0, err
+                }
+            }
+        case IN_STYLE_SCRIPT:
+            if block[0] == byte('t') || block[0] == byte('T') {
+                block = block[1:]
+                w.state = IN_STYLE
+                w.off = 0
+            } else if block[0] == byte('c') || block[0] == byte('C') {
+                block = block[1:]
+                w.state = IN_SCRIPT
+                w.off = 0
+            } else {
+                w.state = FINISH_TAG
+            }
+        case IN_STYLE:
+            i := imatch_prefix(block, yle[w.off:])
+            if i > 0 {
+                w.off += i
+                block = block[i:]
+                if w.off == len(yle) {
+                    w.state = FINISH_END_STYLE
+                }
+            } else {
+                w.state = FINISH_TAG
+            }
+        case FINISH_END_STYLE:
+            i := bytes.IndexByte(block, byte('<'))
+            if i == -1 {
+                block = block[:0]
+            } else {
+                block = block[i+1:]
+                w.state = FINISH_END_STYLE2
+                w.off = 1
+            }
+        case FINISH_END_STYLE2:
+            i := imatch_prefix(block, end_style[w.off:])
+            if i > 0 {
+                w.off += i
+                block = block[i:]
+                if w.off == len(end_style) {
+                    w.state = OUTSIDE
+                }
+            } else {
+                w.state = FINISH_END_STYLE
+            }
+        case IN_SCRIPT:
+            i := imatch_prefix(block, ript[w.off:])
+            if i > 0 {
+                w.off += i
+                block = block[i:]
+                if w.off == len(yle) {
+                    w.state = AFTER_STYLE_SCRIPT
+                }
+            } else {
+                w.state = FINISH_TAG
+            }
+        case AFTER_STYLE_SCRIPT:
+            i := bytes.IndexByte(block, byte('>'))
+            if i == -1 {
+                block = block[:0]
+            } else {
+                block = block[i+1:]
+                w.state = FINISH_TAG
+            }
+        }
+    }
+    return n, nil
+}
+func (w *remove_tags_writer) Close() error {
+    return w.out.Close()
+}
+

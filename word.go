@@ -100,6 +100,37 @@ func (w *word_split_writer) Close() error {
     return w.out.Close()
 }
 
+
+// This writer deals with special code points that are directly
+// encoded in the source charset. See also html.go which deals
+// with the ones specified via html entities.
+// expects full words, i.e. to be chained after split words writer
+type replace_chars_writer struct {
+    out io.WriteCloser
+}
+func new_replace_chars_writer(out io.WriteCloser) *replace_chars_writer {
+    return &replace_chars_writer{out}
+}
+func (w *replace_chars_writer) Write(word []byte) (int, error) {
+    n := len(word)
+    soft_hyphen := []byte{0xc2, 0xad}
+    empty := []byte{}
+    var x []byte
+    if bytes.Index(word, soft_hyphen) == -1 {
+        x = word
+    } else {
+        x = bytes.Replace(word, soft_hyphen, empty, -1)
+    }
+    if _, err := w.out.Write(x); err != nil {
+        return 0, err
+    }
+    return n, nil
+}
+func (w *replace_chars_writer) Close() error {
+    return w.out.Close()
+}
+
+
 type word_writer struct {
     out io.WriteCloser
     word []byte

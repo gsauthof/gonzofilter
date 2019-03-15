@@ -68,10 +68,14 @@ func dump_mark(args *args) {
     out := new_keep_open_writer(o)
 
     h := new_word_split_writer(new_header_filter_writer(
-            new_mark_copy_header_writer(byte('h'), out)))
-    b := new_word_split_writer(new_mark_copy_body_writer(byte('b'), out))
+            new_replace_chars_writer(
+            new_mark_copy_header_writer(byte('h'), out))))
+    b := new_word_split_writer(
+            new_replace_chars_writer(
+            new_mark_copy_body_writer(byte('b'), out)))
     m := new_word_split_writer(new_header_filter_writer(
-            new_mark_copy_header_writer(byte('m'), out)))
+            new_replace_chars_writer(
+            new_mark_copy_header_writer(byte('m'), out))))
 
     if err := write_message(in, h, b, m); err != nil {
         log.Fatal(err)

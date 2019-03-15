@@ -29,3 +29,19 @@ func Test_remove_tags_comment_with_gt(t *testing.T) {
         t.Errorf("Unexpected result: |%v|", b.Bytes())
     }
 }
+
+func Test_unescape_entity(t *testing.T) {
+    if v := unescape_entity([]byte("&shy;")); !bytes.Equal(v, []byte("")) {
+        t.Errorf("Should translate to the empty string, got : |%v|", v)
+    }
+    if v := unescape_entity([]byte("&#173;")); !bytes.Equal(v, []byte("")) {
+        t.Errorf("Should translate to the empty string, got : |%v|", v)
+    }
+    if v := unescape_entity([]byte("&nbsp;")); !bytes.Equal(v, []byte(" ")) {
+        t.Errorf("Should translate to space, got : |%v|", v)
+    }
+    if v := unescape_entity([]byte("&auml;")); !bytes.Equal(v, []byte("ä")) {
+        t.Errorf("Unexpected result: |%v|", v)
+    }
+}
+

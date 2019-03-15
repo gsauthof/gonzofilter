@@ -9,17 +9,26 @@ import (
     "io"
 )
 
+var entity_trans_map = map[string][]byte {
+    // soft hyphen
+    "&#173;" : []byte(""),
+    "&shy;"  : []byte(""),
+    // zero-width non-joiner
+    "&#8204;": []byte(""),
+    "&zwnj;" : []byte(""),
+    // non-breaking space
+    "&#160;" : []byte(" "),
+    "&nbsp;" : []byte(" "),
+}
+
 func unescape_entity(s []byte) []byte {
-    empty := []byte("")
-    space := []byte(" ")
-    switch {
-    case bytes.Equal(s, []byte("&zwnj;")):
-        return empty
-    case bytes.Equal(s, []byte("&nbsp;")):
-        return space
-    default:
+    // Go map don't support []byte slice keys because Go doesn't
+    // define equal on them ...
+    if v := entity_trans_map[string(s)]; v == nil {
         r := html.UnescapeString(string(s))
         return []byte(r)
+    } else {
+        return v
     }
 }
 

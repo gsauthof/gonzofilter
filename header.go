@@ -276,23 +276,22 @@ func (w *header_decode_writer) Write(block []byte) (int, error) {
                 w.cw.Close()
             }
         case IN_QUOTED:
-            i := 1
-            if len(w.partial_quoted) == 0 {
-                i = 2
-            }
-            t := make([]byte, 1)
-            if (i == 2) {
-                hex.Decode(t, block[:i])
+            if len(w.partial_quoted) == 0 && len(block) == 1 {
+                w.partial_quoted = append(w.partial_quoted, block[0])
+                block = block[:0]
             } else {
-                x := []byte{w.partial_quoted[0], block[0]}
-                hex.Decode(t, x)
+                t := make([]byte, 1)
+                if len(w.partial_quoted) == 0 {
+                    hex.Decode(t, block[:2])
+                    block = block[2:]
+                } else {
+                    x := []byte{w.partial_quoted[0], block[0]}
+                    hex.Decode(t, x)
+                    block = block[1:]
+                }
+                w.partial_quoted = w.partial_quoted[:0]
+                w.state = IN_TEXT
             }
-            if _, err := w.cw.Write(t); err != nil {
-                return 0, err
-            }
-            w.partial_quoted = w.partial_quoted[:0]
-            block = block[i:]
-            w.state = IN_TEXT
         case IN_END:
             if block[0] == byte('=') {
                 block = block[1:]

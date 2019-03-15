@@ -55,10 +55,12 @@ func (w *mark_copy_header_writer) Write(word []byte) (int, error) {
             // yes, Go doesn't support mixing word... with the other args
             w.name = append(w.name, w.prefix, byte(':'))
             w.name = append(w.name, word...)
-            w.state = WRITE_LINE
-            if _, err := w.out.Write(w.name); err != nil {
+            t := make([]byte, len(w.name))
+            copy(t, w.name)
+            if _, err := w.out.Write(t); err != nil {
                 return 0, err
             }
+            w.state = WRITE_LINE
         }
     case WRITE_LINE:
         if n == 1 && word[0] == byte('\n') {

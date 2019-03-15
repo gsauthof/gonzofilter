@@ -26,7 +26,7 @@ import sys
 
 base = 'ex'
 
-cmd = './decode'
+cmd = './gonzofilter'
 #cmd = './bogo.sh'
 
 

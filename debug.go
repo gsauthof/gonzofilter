@@ -40,11 +40,15 @@ func dump_words(args *args) {
     b  := open_output(args.body_filename)
     m  := open_output(args.mime_filename)
 
-    //h = new_word_split_writer(new_word_writer(h))
-    h = new_word_split_writer(new_header_filter_writer(
-            new_word_writer(h)))
-    b = new_word_split_writer(new_word_writer(b))
-    m = new_word_split_writer(new_word_writer(m))
+    h = new_word_split_writer(2, (//new_header_filter_writer(
+            new_replace_chars_writer(
+            new_word_writer(h))))
+    b = new_word_split_writer(-1,
+            new_replace_chars_writer(
+            new_word_writer(b)))
+    m = new_word_split_writer(-1,
+            new_replace_chars_writer(
+            new_word_writer(m)))
 
     if err := write_message(in, h, b, m); err != nil {
         log.Fatal(err)
@@ -67,13 +71,13 @@ func dump_mark(args *args) {
     o := new_nl_writer(open_output_or_stdout(args.out_filename))
     out := new_keep_open_writer(o)
 
-    h := new_word_split_writer(new_header_filter_writer(
+    h := new_word_split_writer(2, new_header_filter_writer(
             new_replace_chars_writer(
             new_mark_copy_header_writer(byte('h'), out))))
-    b := new_word_split_writer(
+    b := new_word_split_writer(-1,
             new_replace_chars_writer(
             new_mark_copy_body_writer(byte('b'), out)))
-    m := new_word_split_writer(new_header_filter_writer(
+    m := new_word_split_writer(-1, new_header_filter_writer(
             new_replace_chars_writer(
             new_mark_copy_header_writer(byte('m'), out))))
 

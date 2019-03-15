@@ -13,11 +13,18 @@ type word_split_writer struct {
     state int
     partial_word []byte
     saw_newline bool
+    // the global default might be too large for some headers like To:
+    min_word_len int
 }
-func new_word_split_writer(out io.WriteCloser) *word_split_writer {
+func new_word_split_writer(mwl int, out io.WriteCloser) *word_split_writer {
     w := new(word_split_writer)
     w.out = out
     w.partial_word = make([]byte, 0, max_word_len)
+    if mwl == -1 {
+        w.min_word_len = min_word_len
+    } else {
+        w.min_word_len = mwl
+    }
     return w
 }
 func (w *word_split_writer) Write(block []byte) (int, error) {
@@ -43,7 +50,7 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
                 }
                 block = block[:0]
             } else {
-                if i <= max_word_len && i >= min_word_len {
+                if i <= max_word_len && i >= w.min_word_len {
                     if _, err := w.out.Write(block[:i]); err != nil {
                         return 0, err
                     }
@@ -61,7 +68,7 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
                 block = block[:0]
             } else {
                 l := len(w.partial_word) + i
-                if l >= min_word_len && l <= max_word_len {
+                if l >= w.min_word_len && l <= max_word_len {
                     w.partial_word = append(w.partial_word, block[:i]...)
                     if _, err := w.out.Write(w.partial_word); err != nil {
                         return 0, err

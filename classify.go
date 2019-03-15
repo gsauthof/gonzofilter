@@ -91,13 +91,13 @@ func classify_file(in io.Reader, args *args) (bool, error) {
     ch2 := make(chan []byte, 100)
     go tee_words(ch, ch1, ch2)
 
-    h := new_word_split_writer(new_header_filter_writer(
+    h := new_word_split_writer(2, new_header_filter_writer(
             new_replace_chars_writer(
             new_mark_copy_header_writer(byte('h'), cwo))))
-    b := new_word_split_writer(
+    b := new_word_split_writer(-1,
             new_replace_chars_writer(
             new_mark_copy_body_writer(byte('b'), cwo)))
-    m := new_word_split_writer(new_header_filter_writer(
+    m := new_word_split_writer(-1, new_header_filter_writer(
             new_replace_chars_writer(
             new_mark_copy_header_writer(byte('m'), cwo))))
 

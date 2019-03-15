@@ -26,29 +26,52 @@ func (w *mark_copy_header_writer) Write(word []byte) (int, error) {
     const ( AT_NAME = iota
             WRITE_LINE
         )
+    too_long := []byte("h:X-gonzo-fake-too-long:")
     n := len(word)
     switch w.state {
     case AT_NAME:
-        w.name = w.name[:0]
-        w.name = append(w.name, word...)
-        t := make([]byte, 2 + len(word))
-        t[0] = w.prefix
-        t[1] = byte(':')
-        copy(t[2:], word)
-        w.state = WRITE_LINE
-        if _, err := w.out.Write(t); err != nil {
-            return 0, err
+        if n == 1 && word[0] == byte('\n') {
+            w.name = w.name[:0]
+            w.name = append(w.name, too_long...)
+            if _, err := w.out.Write(too_long); err != nil {
+                return 0, err
+            }
+        } else if n > 0 && word[n-1] != byte(':') {
+            w.name = w.name[:0]
+            w.name = append(w.name, too_long...)
+            if _, err := w.out.Write(too_long); err != nil {
+                return 0, err
+            }
+
+            t := make([]byte, len(w.name) + n)
+            copy(t, w.name)
+            copy(t[len(w.name):], word)
+            if _, err := w.out.Write(t); err != nil {
+                return 0, err
+            }
+            w.state = WRITE_LINE
+        } else {
+            w.name = w.name[:0]
+            // yes, Go doesn't support mixing word... with the other args
+            w.name = append(w.name, w.prefix, byte(':'))
+            w.name = append(w.name, word...)
+            w.state = WRITE_LINE
+            if _, err := w.out.Write(w.name); err != nil {
+                return 0, err
+            }
         }
     case WRITE_LINE:
-        if len(word) == 1 && word[0] == byte('\n') {
+        if n == 1 && word[0] == byte('\n') {
             w.state = AT_NAME
+        } else if n < min_word_len {
+            // skip it
         } else {
-            t := make([]byte, 2 + len(w.name) + len(word))
-            t[0] = w.prefix
-            t[1] = byte(':')
-            copy(t[2:], w.name)
-            copy(t[2+len(w.name):], word)
-            w.out.Write(t)
+            t := make([]byte, len(w.name) + n)
+            copy(t, w.name)
+            copy(t[len(w.name):], word)
+            if _, err := w.out.Write(t); err != nil {
+                return 0, err
+            }
         }
     }
     return n, nil

@@ -31,6 +31,7 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
     const ( SKIP_SPACE = iota
             WORD_START
             IN_WORD
+            IGNORE_WORD
         )
     n := len(block)
     space := []byte(" \n\t\r/'\"")
@@ -64,6 +65,8 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
             if i == -1 {
                 if len(w.partial_word) + len(block) < max_word_len {
                     w.partial_word = append(w.partial_word, block...)
+                } else {
+                    w.state = IGNORE_WORD
                 }
                 block = block[:0]
             } else {
@@ -76,6 +79,15 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
                 }
                 w.saw_newline = (block[i] == byte('\n'))
                 block = block[i+1:]
+                w.state = SKIP_SPACE
+            }
+        case IGNORE_WORD:
+            i := index_any(block, space)
+            if i == -1 {
+                block = block[:0]
+            } else {
+                w.saw_newline = false
+                block = block[i:]
                 w.state = SKIP_SPACE
             }
         case SKIP_SPACE:

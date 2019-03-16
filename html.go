@@ -7,6 +7,7 @@ import (
     "bytes"
     "html"
     "io"
+    "regexp"
 )
 
 var entity_trans_map = map[string][]byte {
@@ -138,10 +139,12 @@ type remove_tags_writer struct {
     out io.WriteCloser
     state int
     off int
+    href_re *regexp.Regexp
 }
 func new_remove_tags_writer(out io.WriteCloser) *remove_tags_writer {
     w := new(remove_tags_writer)
     w.out = out
+    w.href_re = regexp.MustCompile(`(?i)[ \t\n\r]((h(r(e(f)?)?)?)?$|href[ \t\n\r=])`)
     return w
 }
 func (w *remove_tags_writer) Write(block []byte) (int, error) {
@@ -157,6 +160,10 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
             IN_STYLE
             IN_SCRIPT
             AFTER_STYLE_SCRIPT
+            IN_A
+            MATCH_HREF
+            START_URL
+            WRITE_URL
         )
     n := len(block)
     space := []byte(" ")
@@ -164,6 +171,8 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
     ript := []byte("ript")
     end_style := []byte("</style>")
     end_comment := []byte("-->")
+    quotes := []byte(`"'`)
+    href := []byte(" href")
     for {
         if len(block) == 0 {
             break
@@ -184,13 +193,88 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
                 block = block[i+1:]
             }
         case IN_TAG:
-            if block[0] == byte('s') || block[0] == byte('S') {
+            switch block[0] {
+            case byte('A'):
+                fallthrough
+            case byte('a'):
+                block = block[1:]
+                w.state = IN_A
+            // case byte('i'):
+            //     block = block[1:]
+            //     w.state = IN_IMG
+            case byte('s'):
+                fallthrough
+            case byte('S'):
                 block = block[1:]
                 w.state = IN_STYLE_SCRIPT
-            } else if block[0] == byte('!') {
+            case byte('!'):
                 block = block[1:]
                 w.state = IN_DECL_COMMENT
+            default:
+                w.state = FINISH_TAG
+            }
+        case IN_A:
+            if is_space(block[0]) {
+                w.off = 0
+                w.state = MATCH_HREF
+                if _, err := w.out.Write(space); err != nil {
+                    return 0, err
+                }
             } else {
+                w.state = FINISH_TAG
+            }
+        case MATCH_HREF:
+            if w.off == 0 {
+                l := w.href_re.FindIndex(block)
+                if l == nil {
+                    i := bytes.IndexByte(block, byte('>'))
+                    if i == -1 {
+                        block = block[:0]
+                    } else {
+                        if _, err := w.out.Write(space); err != nil {
+                            return 0, err
+                        }
+                        block = block[i+1:]
+                        w.state = OUTSIDE
+                    }
+                } else {
+                    x := l[1]-l[0]
+                    if x == 6 {
+                        w.state = START_URL
+                    } else {
+                        w.off = x
+                    }
+                    block = block[l[1]:]
+                }
+            } else if w.off == 5 {
+                if is_space(block[0]) || block[0] == byte('=') {
+                    w.state = START_URL
+                }
+                w.off = 0
+            } else {
+                i := imatch_prefix(block, href[w.off:])
+                if i == 0 {
+                    w.off = 0
+                } else {
+                    w.off += i
+                }
+            }
+        case START_URL:
+            i := index_any(block, quotes)
+            if i == -1 {
+                block = block[:0]
+            } else {
+                block = block[i+1:]
+                w.state = WRITE_URL
+            }
+        case WRITE_URL:
+            i := index_any(block, quotes)
+            if i == -1 {
+                w.out.Write(block)
+                block = block[:0]
+            } else {
+                w.out.Write(block[:i])
+                block = block[i+1:]
                 w.state = FINISH_TAG
             }
         case IN_DECL_COMMENT:

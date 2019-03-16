@@ -140,11 +140,15 @@ type remove_tags_writer struct {
     state int
     off int
     href_re *regexp.Regexp
+    src_re *regexp.Regexp
+    current_re *regexp.Regexp
+    current_att []byte
 }
 func new_remove_tags_writer(out io.WriteCloser) *remove_tags_writer {
     w := new(remove_tags_writer)
     w.out = out
     w.href_re = regexp.MustCompile(`(?i)[ \t\n\r]((h(r(e(f)?)?)?)?$|href[ \t\n\r=])`)
+    w.src_re = regexp.MustCompile(`(?i)[ \t\n\r]((s(r(c)?)?)?$|src[ \t\n\r=])`)
     return w
 }
 func (w *remove_tags_writer) Write(block []byte) (int, error) {
@@ -164,6 +168,9 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
             MATCH_HREF
             START_URL
             WRITE_URL
+            IN_IMG
+            MATCH_SRC
+            MATCH_HREF_SRC
         )
     n := len(block)
     space := []byte(" ")
@@ -173,6 +180,8 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
     end_comment := []byte("-->")
     quotes := []byte(`"'`)
     href := []byte(" href")
+    src := []byte(" src")
+    img := []byte("img")
     for {
         if len(block) == 0 {
             break
@@ -199,9 +208,12 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
             case byte('a'):
                 block = block[1:]
                 w.state = IN_A
-            // case byte('i'):
-            //     block = block[1:]
-            //     w.state = IN_IMG
+            case byte('I'):
+                fallthrough
+            case byte('i'):
+                block = block[1:]
+                w.state = IN_IMG
+                w.off = 1
             case byte('s'):
                 fallthrough
             case byte('S'):
@@ -213,6 +225,26 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
             default:
                 w.state = FINISH_TAG
             }
+        case IN_IMG:
+            if w.off == 3 {
+                if is_space(block[0]) {
+                    w.off = 0
+                    w.state = MATCH_SRC
+                    if _, err := w.out.Write(space); err != nil {
+                        return 0, err
+                    }
+                } else {
+                    w.state = FINISH_TAG
+                }
+            } else {
+                i := imatch_prefix(block, img[w.off:])
+                if i == 0 {
+                    w.state = FINISH_TAG
+                } else {
+                    w.off += i
+                    block = block[i:]
+                }
+            }
         case IN_A:
             if is_space(block[0]) {
                 w.off = 0
@@ -223,9 +255,17 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
             } else {
                 w.state = FINISH_TAG
             }
+        case MATCH_SRC:
+            w.current_re = w.src_re
+            w.current_att = src
+            w.state = MATCH_HREF_SRC
         case MATCH_HREF:
+            w.current_re = w.href_re
+            w.current_att = href
+            w.state = MATCH_HREF_SRC
+        case MATCH_HREF_SRC:
             if w.off == 0 {
-                l := w.href_re.FindIndex(block)
+                l := w.current_re.FindIndex(block)
                 if l == nil {
                     i := bytes.IndexByte(block, byte('>'))
                     if i == -1 {
@@ -238,7 +278,7 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
                     i := bytes.IndexByte(block[:l[0]], byte('>'))
                     if i == -1 {
                         x := l[1]-l[0]
-                        if x == 6 {
+                        if x == len(w.current_att) + 1 {
                             w.state = START_URL
                         } else {
                             w.off = x
@@ -249,13 +289,13 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
                         w.state = FINISH_TAG
                     }
                 }
-            } else if w.off == 5 {
+            } else if w.off == len(w.current_att) {
                 if is_space(block[0]) || block[0] == byte('=') {
                     w.state = START_URL
                 }
                 w.off = 0
             } else {
-                i := imatch_prefix(block, href[w.off:])
+                i := imatch_prefix(block, w.current_att[w.off:])
                 if i == 0 {
                     w.off = 0
                 } else {

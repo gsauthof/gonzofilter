@@ -231,20 +231,23 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
                     if i == -1 {
                         block = block[:0]
                     } else {
-                        if _, err := w.out.Write(space); err != nil {
-                            return 0, err
-                        }
-                        block = block[i+1:]
-                        w.state = OUTSIDE
+                        block = block[i:]
+                        w.state = FINISH_TAG
                     }
                 } else {
-                    x := l[1]-l[0]
-                    if x == 6 {
-                        w.state = START_URL
+                    i := bytes.IndexByte(block[:l[0]], byte('>'))
+                    if i == -1 {
+                        x := l[1]-l[0]
+                        if x == 6 {
+                            w.state = START_URL
+                        } else {
+                            w.off = x
+                        }
+                        block = block[l[1]:]
                     } else {
-                        w.off = x
+                        block = block[i:]
+                        w.state = FINISH_TAG
                     }
-                    block = block[l[1]:]
                 }
             } else if w.off == 5 {
                 if is_space(block[0]) || block[0] == byte('=') {

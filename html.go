@@ -84,6 +84,9 @@ func (w *replace_entities_writer) Write(block []byte) (int, error) {
         case AFTER_ET:
             // violates the spec, but & may show up as-is in some HTML
             if is_space(block[0]) {
+                if _, err := w.out.Write(w.partial_entity); err != nil {
+                    return 0, err
+                }
                 w.state = OUTSIDE
             } else {
                 w.state = IN_ENTITY
@@ -92,6 +95,9 @@ func (w *replace_entities_writer) Write(block []byte) (int, error) {
             i := index_any(block, []byte(";<"))
             if i == -1 {
                 if len(w.partial_entity) + len(block) > max_entity_len {
+                    if _, err := w.out.Write(w.partial_entity); err != nil {
+                        return 0, err
+                    }
                     w.state = OUTSIDE
                 } else {
                     w.partial_entity = append(w.partial_entity, block...)
@@ -99,9 +105,15 @@ func (w *replace_entities_writer) Write(block []byte) (int, error) {
                 }
             } else {
                 if block[i] == byte('<') {
+                    if _, err := w.out.Write(w.partial_entity); err != nil {
+                        return 0, err
+                    }
                     w.state = OUTSIDE
                 } else {
                     if len(w.partial_entity) + i > max_entity_len {
+                        if _, err := w.out.Write(w.partial_entity); err != nil {
+                            return 0, err
+                        }
                         w.state = OUTSIDE
                     } else {
                         w.partial_entity = append(w.partial_entity, block[:i+1]...)

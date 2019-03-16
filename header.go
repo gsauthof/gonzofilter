@@ -119,16 +119,16 @@ func (w *header_decode_writer) Write(block []byte) (int, error) {
                 w.charset = w.charset[:0]
             }
         case IN_BEGIN:
-            if bytes.HasPrefix(block, []byte("?")) {
+            if block[0] == byte('?') {
                 w.state = IN_CHARSET
                 w.charset = w.charset[:0]
+                block = block[1:]
             } else {
                 if _, err := w.out.Write(equal); err != nil {
                     return 0, err
                 }
                 w.state = OUTSIDE
             }
-            block = block[1:]
         case IN_CHARSET:
             i := bytes.IndexByte(block, byte('?'))
             if i == -1 {

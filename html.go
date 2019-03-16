@@ -46,6 +46,7 @@ func new_replace_entities_writer(out io.WriteCloser) *replace_entities_writer {
 }
 func (w *replace_entities_writer) Write(block []byte) (int, error) {
     const ( OUTSIDE = iota
+            AFTER_ET
             IN_ENTITY
         )
     n := len(block)
@@ -65,43 +66,53 @@ func (w *replace_entities_writer) Write(block []byte) (int, error) {
                 if _, err := w.out.Write(block[:i]); err != nil {
                     return 0, err
                 }
-                block = block[i:]
-                j := bytes.IndexByte(block[1:], byte(';'))
-                if j == -1 {
-                    w.partial_entity = w.partial_entity[:1]
-                    if len(block) < max_entity_len {
-                        w.partial_entity = append(w.partial_entity, block[1:]...)
-                        block = block[:0]
-                        w.state = IN_ENTITY
-                    } else {
-                        block = block[1:]
-                    }
-                } else {
-                    j += 1
-                    s := unescape_entity(block[:j+1])
+
+                j := index_any(block[i+1:], []byte(";<"))
+                if j != -1 && block[i+1+j] == byte(';') && !is_space(block[i+1]) && j + 1 < max_entity_len {
+                    // fast path
+                    s := unescape_entity(block[i:i+1+j+1])
                     if _, err := w.out.Write([]byte(s)); err != nil {
                         return 0, err
                     }
-                    block = block[j+1:]
+                    block = block[i+1+j+1:]
+                } else {
+                    block = block[i+1:]
+                    w.state = AFTER_ET
+                    w.partial_entity = w.partial_entity[:1]
                 }
+            }
+        case AFTER_ET:
+            // violates the spec, but & may show up as-is in some HTML
+            if is_space(block[0]) {
+                w.state = OUTSIDE
+            } else {
+                w.state = IN_ENTITY
             }
         case IN_ENTITY:
-            i := bytes.IndexByte(block, byte(';'))
+            i := index_any(block, []byte(";<"))
             if i == -1 {
-                i = len(block)-1
-            }
-            if len(w.partial_entity) + i < max_entity_len {
-                w.partial_entity = append(w.partial_entity, block[:i+1]...)
-                block = block[i+1:]
-                if w.partial_entity[len(w.partial_entity)-1] == byte(';') {
-                    s := unescape_entity(w.partial_entity)
-                    if _, err := w.out.Write([]byte(s)); err != nil {
-                        return 0, err
-                    }
+                if len(w.partial_entity) + len(block) > max_entity_len {
                     w.state = OUTSIDE
+                } else {
+                    w.partial_entity = append(w.partial_entity, block...)
+                    block = block[:0]
                 }
             } else {
-                w.state = OUTSIDE
+                if block[i] == byte('<') {
+                    w.state = OUTSIDE
+                } else {
+                    if len(w.partial_entity) + i > max_entity_len {
+                        w.state = OUTSIDE
+                    } else {
+                        w.partial_entity = append(w.partial_entity, block[:i+1]...)
+                        s := unescape_entity(w.partial_entity)
+                        if _, err := w.out.Write([]byte(s)); err != nil {
+                            return 0, err
+                        }
+                        block = block[i+1:]
+                        w.state = OUTSIDE
+                    }
+                }
             }
         }
     }

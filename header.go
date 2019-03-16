@@ -256,6 +256,7 @@ func (w *header_decode_writer) Write(block []byte) (int, error) {
                             if (end != endP) {
                                 w.state = OUTSIDE
                             } else {
+                                w.partial_quoted = w.partial_quoted[:0]
                                 w.partial_quoted = append(w.partial_quoted, quoted...)
                                 quoted = quoted[:0]
                                 w.state = IN_QUOTED
@@ -264,6 +265,7 @@ func (w *header_decode_writer) Write(block []byte) (int, error) {
                             if (end != endP) {
                                 w.state = OUTSIDE
                             } else {
+                                w.partial_quoted = w.partial_quoted[:0]
                                 quoted = quoted[:0]
                                 w.state = IN_QUOTED
                             }
@@ -289,7 +291,9 @@ func (w *header_decode_writer) Write(block []byte) (int, error) {
                     hex.Decode(t, x)
                     block = block[1:]
                 }
-                w.partial_quoted = w.partial_quoted[:0]
+                if _, err := w.cw.Write(t); err != nil {
+                    return 0, err
+                }
                 w.state = IN_TEXT
             }
         case IN_END:

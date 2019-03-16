@@ -92,9 +92,6 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
             }
         case SKIP_SPACE:
             var i int
-            if len(block) == 0 {
-                w.state = WORD_START
-            }
             for i = 0; i < len(block); i++ {
                 if is_space(block[i]) {
                     w.saw_newline = w.saw_newline || (block[i] == byte('\n'))

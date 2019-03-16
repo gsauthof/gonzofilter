@@ -33,17 +33,21 @@ func (w *mark_copy_header_writer) Write(word []byte) (int, error) {
         if n == 1 && word[0] == byte('\n') {
             w.name = w.name[:0]
             w.name = append(w.name, too_long...)
-            if _, err := w.out.Write(too_long); err != nil {
+            t := make([]byte, len(w.name))
+            copy(t, w.name)
+            if _, err := w.out.Write(t); err != nil {
                 return 0, err
             }
         } else if n > 0 && word[n-1] != byte(':') {
             w.name = w.name[:0]
             w.name = append(w.name, too_long...)
-            if _, err := w.out.Write(too_long); err != nil {
+            t := make([]byte, len(w.name))
+            copy(t, w.name)
+            if _, err := w.out.Write(t); err != nil {
                 return 0, err
             }
 
-            t := make([]byte, len(w.name) + n)
+            t = make([]byte, len(w.name) + n)
             copy(t, w.name)
             copy(t[len(w.name):], word)
             if _, err := w.out.Write(t); err != nil {

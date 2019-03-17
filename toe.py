@@ -20,6 +20,7 @@
 # 2019, Georg Sauthoff
 
 import argparse
+import json
 import os
 import random
 import subprocess
@@ -32,6 +33,7 @@ def parse_args(*a):
             help='base directory - cf. comments in this script (default: ex)')
     p.add_argument('--cmd', default='./gonzofilter',
             metavar='COMMAND', help='spamfilter command to test - e.g. ./gonzofilter or ./bogo.sh (default: ./gonzofilter)')
+    p.add_argument('--json', action='store_true', help='json output')
     args = p.parse_args(*a)
     return args
 
@@ -101,7 +103,9 @@ def toe():
             break
         if ham_msg_cnt == old_ham_msg_cnt and spam_msg_cnt == old_spam_msg_cnt:
             break
-    print(f'Learned {ham_msg_cnt} ham messages and {spam_msg_cnt} spam messages')
+    if not args.json:
+        print(f'Learned {ham_msg_cnt} ham messages and {spam_msg_cnt} spam messages')
+    return { 'lham': ham_msg_cnt, 'lspam': spam_msg_cnt }
 
 def test_class(spam=False):
     klasse = 'spam' if spam else 'ham'
@@ -118,15 +122,22 @@ def test_class(spam=False):
 def test():
     true_positives, false_negatives = test_class(spam=True)
     true_negatives, false_positives = test_class()
-    print(f'True (Spam) Positives: {true_positives}, False Negatives: {false_negatives}, True negatives: {true_negatives}, False Positives: {false_positives}')
     sensitivity = true_positives / (true_positives + false_negatives)
     specificity = true_negatives / (true_negatives + false_positives)
     accuracy = (true_positives + true_negatives) / (true_positives + false_negatives + true_negatives + false_positives)
-    print(f'Spam detection Sensitivity: {sensitivity}, Specificity: {specificity}, Accuracy: {accuracy}')
+
+    if not args.json:
+        print(f'True (Spam) Positives: {true_positives}, False Negatives: {false_negatives}, True negatives: {true_negatives}, False Positives: {false_positives}')
+        print(f'Spam detection Sensitivity: {sensitivity}, Specificity: {specificity}, Accuracy: {accuracy}')
+
+    d = { 'FN': false_negatives, 'FP': false_positives, 'sensi': sensitivity, 'speci': specificity, 'accuracy': accuracy }
+    return d
 
 def main():
-    toe()
-    test()
+    es = toe()
+    fs = test()
+    x = {**es, **fs}
+    print(json.dumps(x))
 
 if __name__ == '__main__':
     global args

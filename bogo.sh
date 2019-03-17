@@ -11,8 +11,10 @@ if [ "$action" = -check ]; then
     r=$?
     set -e
     if [ "$r" -eq 0 ]; then
+        ## SPAM
         exit 11
     else
+        ## HAM
         exit 10
     fi
 fi

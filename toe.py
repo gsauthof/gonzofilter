@@ -19,33 +19,39 @@
 #
 # 2019, Georg Sauthoff
 
+import argparse
 import os
 import random
 import subprocess
 import sys
 
-base = 'ex'
 
-cmd = './gonzofilter'
-#cmd = './bogo.sh'
+def parse_args(*a):
+    p = argparse.ArgumentParser()
+    p.add_argument('--base', default='ex', metavar='DIRECTORY',
+            help='base directory - cf. comments in this script (default: ex)')
+    p.add_argument('--cmd', default='./gonzofilter',
+            metavar='COMMAND', help='spamfilter command to test - e.g. ./gonzofilter or ./bogo.sh (default: ./gonzofilter)')
+    args = p.parse_args(*a)
+    return args
 
 
 def learn(filename, spam=False):
     action = '-spam' if spam else '-ham'
-    p = subprocess.check_output([cmd, action, '-in', filename])
+    p = subprocess.check_output([args.cmd, action, '-in', filename])
 
 def classifies(filename, spam=False):
-    p = subprocess.run([cmd, '-check', '-in', filename], stdout=subprocess.DEVNULL)
+    p = subprocess.run([args.cmd, '-check', '-in', filename], stdout=subprocess.DEVNULL)
     x = 11 if spam else 10
     if p.returncode not in (10, 11):
         raise RuntimeError(f'Unexpected exit status for {filename}: {p.returncode})')
     return p.returncode == x
 
 def toe():
-    d = base + '/learn/ham/'
+    d = args.base + '/learn/ham/'
     hams = [ d + x for x in os.listdir(d) ]
     random.shuffle(hams)
-    d = base + '/learn/spam/'
+    d = args.base + '/learn/spam/'
     spams = [ d + x for x in os.listdir(d) ]
     random.shuffle(spams)
 
@@ -99,7 +105,7 @@ def toe():
 
 def test_class(spam=False):
     klasse = 'spam' if spam else 'ham'
-    d = base + f'/test/{klasse}/'
+    d = args.base + f'/test/{klasse}/'
     xs = [ d + x for x in os.listdir(d) ]
     true, false = 0, 0
     for x in xs:
@@ -123,6 +129,8 @@ def main():
     test()
 
 if __name__ == '__main__':
+    global args
+    args = parse_args()
     sys.exit(main())
 
 

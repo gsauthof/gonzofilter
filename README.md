@@ -51,21 +51,21 @@ Go and Fedora packaged dependencies, and the other filters also
 installed from the Fedora repositories.
 
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    command          ,   FN,   FP, accuracy,  lham,  lspam,  sensi,  speci,  time_s
+    command              FN    FP  accuracy   lham   lspam   sensi   speci   time_s
     ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-    gonzofilter (max),  115,   14,     0.93,   167,    168,   0.88,   0.99,   44.06
-    gonzofilter (min),   72,    5,     0.90,   132,    133,   0.81,   0.98,   37.74
-    bogo (max)       ,  172,    7,     0.87,   218,    218,   0.75,   0.99,   50.79
-    bogo (min)       ,  149,    3,     0.85,   188,    188,   0.71,   0.99,   44.24
-    bsfilter (max)   ,  178,   16,     0.90,   212,    212,   0.83,   0.99,  341.31
-    bsfilter (min)   ,  103,    8,     0.84,   165,    164,   0.70,   0.97,  279.01
-    qsf (max)        ,  148,   43,     0.90,   227,    227,   0.86,   0.96,   89.74
-    qsf (min)        ,   83,   24,     0.86,   196,    195,   0.75,   0.93,   73.40
-    spamprobe (max)  ,   90,   15,     0.92,   153,    153,   0.87,   0.98,   77.70
-    spamprobe (min)  ,   78,   10,     0.91,   136,    136,   0.85,   0.97,   64.89
+    gonzofilter (max)   115    14      0.93    167     168    0.88    0.99    44.06
+    gonzofilter (min)    72     5      0.90    132     133    0.81    0.98    37.74
+    bogo (max)          172     7      0.87    218     218    0.75    0.99    50.79
+    bogo (min)          149     3      0.85    188     188    0.71    0.99    44.24
+    bsfilter (max)      178    16      0.90    212     212    0.83    0.99   341.31
+    bsfilter (min)      103     8      0.84    165     164    0.70    0.97   279.01
+    qsf (max)           148    43      0.90    227     227    0.86    0.96    89.74
+    qsf (min)            83    24      0.86    196     195    0.75    0.93    73.40
+    spamprobe (max)      90    15      0.92    153     153    0.87    0.98    77.70
+    spamprobe (min)      78    10      0.91    136     136    0.85    0.97    64.89
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Note that Gonzofilter has the highest [accuracy][accuracu] and fastest
+Note that Gonzofilter has the highest [accuracy][accuracy] and fastest
 runtime, while only using a moderate number of training messages.
 
 For the experiment I randomly selected 1000 ham mails from my
@@ -135,7 +135,7 @@ in Ruby, which is compiled to Byte-Code that is interpreted
 without a [JIT][jit] by the Ruby VM. [Bogofilter][bogo] and the
 [Quick Spam Filter (QSF)][qsf] are implemented in C, where
 Bogofilter uses a [Flex][flex] generated tokenizer, while
-[Spamprobe][spamb] is implemented in C++.
+[Spamprobe][spamp] is implemented in C++.
 
 ## Build Instructions
 

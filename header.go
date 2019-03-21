@@ -91,10 +91,7 @@ func (w *header_decode_writer) Write(block []byte) (int, error) {
     if n == 0 {
         return 0, nil
     }
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         switch w.state {
         case OUTSIDE:
             i := bytes.Index(block, []byte("=?"))
@@ -221,10 +218,7 @@ func (w *header_decode_writer) Write(block []byte) (int, error) {
                 endP = i +2
             }
             quoted := block[:end]
-            for {
-                if len(quoted) == 0 {
-                    break
-                }
+            for len(quoted) != 0 {
                 i := index_any(quoted, []byte("=_"))
                 if i == -1 {
                     if _, err := w.cw.Write(quoted); err != nil {
@@ -368,10 +362,7 @@ func (w *extract_header_writer) Write(block []byte) (int, error) {
     content_t := []byte("content-t")
     ype := []byte("ype: ")
     ransfer_encoding := []byte("ransfer-encoding: ")
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         switch w.state {
         case AFTER_NEWLINE:
             w.off = 0

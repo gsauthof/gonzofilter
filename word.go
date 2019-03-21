@@ -36,10 +36,7 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
     n := len(block)
     space := []byte(" \n\t\r/'\"")
     nl := []byte("\n")
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         switch w.state {
         case WORD_START:
             i := index_any(block, space)

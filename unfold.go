@@ -30,10 +30,7 @@ func (w *unfold_writer) Write(block []byte) (int, error) {
     )
     n := len(block)
     newline := []byte("\n")
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         switch w.state {
         case OUTSIDE:
             i := bytes.IndexByte(block, byte('\n'))

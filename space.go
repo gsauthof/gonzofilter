@@ -24,10 +24,7 @@ func (w *shrink_space_writer) Write(block []byte) (int, error) {
     n := len(block)
     space := []byte(" \n\t\r")
     end := 0
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         switch w.state {
         case OUTSIDE:
             end = 0

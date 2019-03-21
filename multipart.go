@@ -38,10 +38,7 @@ func (w *multipart_split_writer) Write(block []byte) (int, error) {
             AFTER_EOF
         )
     n := len(block)
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         switch w.state {
         case AFTER_NEWLINE:
             switch {

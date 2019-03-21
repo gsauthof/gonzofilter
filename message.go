@@ -74,10 +74,7 @@ func new_split_message_writer(houtP io.WriteCloser, boutP io.WriteCloser, moutP 
 
 func (w *split_message_writer) Write(block []byte) (int, error) {
     n := len(block)
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         action, bs, bl := w.m.next(block)
         block = bl
         switch action {

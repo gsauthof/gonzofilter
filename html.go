@@ -51,10 +51,7 @@ func (w *replace_entities_writer) Write(block []byte) (int, error) {
             IN_ENTITY
         )
     n := len(block)
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         switch w.state {
         case OUTSIDE:
             i := bytes.IndexByte(block, byte('&'))
@@ -182,10 +179,7 @@ func (w *remove_tags_writer) Write(block []byte) (int, error) {
     href := []byte(" href")
     src := []byte(" src")
     img := []byte("img")
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         switch w.state {
         case OUTSIDE:
             i := bytes.IndexByte(block, byte('<'))

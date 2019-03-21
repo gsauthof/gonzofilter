@@ -123,10 +123,7 @@ func (w *xgonzo_filter_writer) Write(block []byte) (int, error) {
     n := len(block)
     xgonzo := []byte("\nx-gonzo: ")
     old_xgonzo := []byte("X-old-gonzo: ")
-    for {
-        if len(block) == 0 {
-            break
-        }
+    for len(block) != 0 {
         switch w.state {
         case IN_GONZO:
             i := imatch_prefix(block, xgonzo[w.off:])

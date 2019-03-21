@@ -99,8 +99,7 @@ func passthrough_message(args *args) {
         }
     }
 
-    var is_ham bool
-    is_ham, err = classify_file(f, args)
+    is_ham, err := classify_file(f, args)
     if err != nil {
         log.Fatal(err)
     }

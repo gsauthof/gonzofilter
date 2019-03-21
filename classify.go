@@ -103,9 +103,8 @@ func classify_file(in io.Reader, args *args) (bool, error) {
 
     ham_done := make(chan class_result)
     spam_done := make(chan class_result)
-    var vocabulary uint32
 
-    vocabulary, err = get_vocabulary(db)
+    vocabulary, err := get_vocabulary(db)
     if err != nil {
         return true, err
     }

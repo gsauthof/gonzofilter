@@ -21,7 +21,7 @@ The exit status 10 stands for a 'ham' classification result while
 11 stands for 'spam'.
 
 For integration with a mail-delivery-agent it also supports a
-pass-through mode (cf. the `-pass option`).
+pass-through mode (cf. the `-pass` option).
 
 To just use it as tokenizer:
 
@@ -165,7 +165,45 @@ manager. For example, on Fedora:
 
 Tested on:
 
-- Fedora 29, 31
+- Fedora 29, 31 (compile+execute)
+- CentOS 7 (execute)
+
+## Maildrop
+
+[Maildrop][maildrop] is a fine and actively maintained mail delivery
+agent (MDA) that also supports piping messages through external
+filters such as Gonzofilter.
+
+Since maildrop doesn't support delivery decisions to be based on
+the exit status of an external filter executable we have to call
+Gonzofilter in pass-through mode and check the added `X-gonzo:`
+header in maildrop.
+
+Example `.mailfilter` snippet:
+
+```
+# extra copies for debugging purposes
+cc md/copy
+
+xfilter "/usr/local/bin/gonzofilter -pass"
+
+if  ((/^X-gonzo: spam/:H)
+{
+    to md/spamfilter
+}
+
+# catch-all default destination
+to maildir
+```
+
+Notes:
+
+- This requires maildrop >= 3 (because of the `:H` option)
+- maildrop executes the external executable with CWD=$HOME of the
+  MDA user - thus, Gonzofilter expects a usable database to
+  exist in `$HOME/hamspam.db`. See also the `-db` option to use
+  another database location and `toe.py` for how to create such a
+  database.
 
 ## Motivation
 
@@ -195,3 +233,5 @@ Tested on:
 [gc]: https://en.wikipedia.org/wiki/Garbage_collection_(computer_science)
 [go]: https://en.wikipedia.org/wiki/Go_(programming_language)
 [pcounts]: https://en.wikipedia.org/wiki/Additive_smoothing
+[maildrop]: https://www.courier-mta.org/maildropfilter.html
+

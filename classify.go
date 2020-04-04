@@ -7,7 +7,7 @@ import (
     "encoding/binary"
     "errors"
     "fmt"
-    "github.com/coreos/bbolt"
+    bolt "go.etcd.io/bbolt"
     "io"
     "log"
     "math"

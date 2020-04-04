@@ -5,7 +5,7 @@ package main
 
 import (
     "encoding/binary"
-    "github.com/coreos/bbolt"
+    bolt "go.etcd.io/bbolt"
     "log"
 )
 

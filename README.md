@@ -152,16 +152,20 @@ elsewhere or you want to use another workspace location.
 
 It only needs a few extra dependencies:
 
-    - github.com/coreos/bbolt
+    - go.etcd.io/bbolt
     - golang.org/x/text/encoding
     - golang.org/x/sys/unix
 
 They can be installed with `go get` or the distribution's package
 manager. For example, on Fedora:
 
-    # dnf install golang-github-coreos-bbolt-devel \
+    # dnf install golang-etcd-bbolt-devel \
                   golang-golangorg-text-devel \
                   golang-github-golang-sys-devel
+
+Tested on:
+
+- Fedora 29, 31
 
 ## Motivation
 

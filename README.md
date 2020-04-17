@@ -205,6 +205,52 @@ Notes:
   another database location and `toe.py` for how to create such a
   database.
 
+## Security & Reliability
+
+Piping all incoming mail through an executable for spam filtering
+makes this executable an interesting and worthwhile target for
+remote attacks.
+
+The lexing and parsing required for spam filtering arguably is
+much more involved than what is required for mail transport and
+delivery. Thus, the added attack surface isn't small nor trivial.
+
+Since Gonzofilter is implemented in Go which provides memory
+safety features such as bounds checking, a whole class of bugs is
+eliminated from the start. Of course, one can program bugs in
+every programming language, but being able to rely on memory
+safety features gives you an edge, security wise.
+
+Otherwise, Gonzofilter contains some unit tests, was tested with
+a wide range of nasty mail, and it is dogfooded by its author.
+
+When using a mail filter that is written in a memory unsafe
+language (such as C), one has to ask herself how well it is
+reviewed and tested for security issues. Perhaps it got some
+auditing by other developers and it was fuzzed - perhaps not -
+even if it's packaged by Linux distributions.
+
+For example, Bogofilter, implemented in C, was started in 2002 or
+so, is packaged by some Linux Distributions and has a good
+classification and runtime performance. However, it's a little
+frightening that a bit of fuzzing in 2019 easily finds a row of
+memory safety issues: [out-of-bounds reads #118][bf118] and
+[#126][bf126], [memory leaks #119][bf119] and [#125][bf125],
+[buffer management issues #120] and [#121][bf121],
+[heap-buffer-overflows/out-of-bounds writes #122][bf122],
+[#123][bf123] and [#124][bf124]. Likely meaning that in
+the preceding years nobody cared to fuzz it. (Or perhaps somebody
+fuzzed it but not publicized the findings.) Depending on in what
+shape the code base is and how much maintenance manpower is
+available, it may take some time for found issues to be fixed (3
+months for the above examples, not verified).
+
+On the other hand, Bogofilter even had a history of heap-buffer
+out-of-bounds writes in the years 2004 to 2012: [documented in 5
+CVEs][bfcve] ([see also][bfcve2]). And still the reviews and
+fixes that resulted from those findings left some low hanging
+fuzzing fruit, years later.
+
 ## Motivation
 
 - Have an accessible platform to test different text
@@ -235,3 +281,14 @@ Notes:
 [pcounts]: https://en.wikipedia.org/wiki/Additive_smoothing
 [maildrop]: https://www.courier-mta.org/maildropfilter.html
 
+[bf118]: https://sourceforge.net/p/bogofilter/bugs/118/
+[bf119]: https://sourceforge.net/p/bogofilter/bugs/119/
+[bf120]: https://sourceforge.net/p/bogofilter/bugs/120/
+[bf121]: https://sourceforge.net/p/bogofilter/bugs/121/
+[bf122]: https://sourceforge.net/p/bogofilter/bugs/122/
+[bf123]: https://sourceforge.net/p/bogofilter/bugs/123/
+[bf124]: https://sourceforge.net/p/bogofilter/bugs/124/
+[bf125]: https://sourceforge.net/p/bogofilter/bugs/125/
+[bf126]: https://sourceforge.net/p/bogofilter/bugs/126/
+[bfcve]: https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword=bogofilter
+[bfcve2]: https://bogofilter.sourceforge.io/security/

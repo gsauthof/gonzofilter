@@ -7,10 +7,10 @@
 
 package main
 
-func sandbox_me() {
+func sandbox_me(debug bool) {
     // no-op on non-Linux OS
 }
 
-func blacklist_opens() {
+func blacklist_open(debug bool) {
     // no-op on non-Linux OS
 }

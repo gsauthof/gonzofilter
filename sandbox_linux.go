@@ -87,8 +87,10 @@ func sandbox_me(debug bool) {
         "prctl"             ,
         "read"              ,
         "readlinkat"        ,
+        "restart_syscall"   ,
         "rt_sigaction"      ,
         "rt_sigprocmask"    ,
+        "rt_sigreturn"      , // really needed?
         "sched_getaffinity" ,
         "sched_yield"       ,
         "seccomp"           , // such that we can downsize this list later

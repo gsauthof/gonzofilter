@@ -163,10 +163,20 @@ manager. For example, on Fedora:
                   golang-golangorg-text-devel \
                   golang-github-golang-sys-devel
 
+For the sandboxing feature (`-sandbox`) it also requires
+[github.com/seccomp/libseccomp-golang][scg] greater than version
+0.9.1. On Non-Linux systems this dependency should be
+automatically skipped. If you also want to skip it under Linux
+you can disable it like this:
+
+    $ mv seccomp_linux.go seccomp_linux.gone
+    $ sed -i '/^\/\/ +build !linux/d' seccomp.go
+
 Tested on:
 
 - Fedora 29, 31 (compile+execute)
-- CentOS 7 (execute)
+- CentOS 7 (execute, the kernel/libseccomp is too old for the sandbox
+  support, though)
 
 ## Maildrop
 
@@ -223,6 +233,12 @@ safety features gives you an edge, security wise.
 
 Otherwise, Gonzofilter contains some unit tests, was tested with
 a wide range of nasty mail, and it is dogfooded by its author.
+
+In addition, as a [defence in depth][did] measure, Gonzofilter
+optionally supports sandboxing under Linux with [seccomp][sc],
+e.g.:
+
+    gonzofilter -passthrough -sandbox
 
 When using a mail filter that is written in a memory unsafe
 language (such as C), one has to ask herself how well it is
@@ -292,3 +308,7 @@ fuzzing fruit, years later.
 [bf126]: https://sourceforge.net/p/bogofilter/bugs/126/
 [bfcve]: https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword=bogofilter
 [bfcve2]: https://bogofilter.sourceforge.io/security/
+
+[scg]: https://github.com/seccomp/libseccomp-golang
+[sc]: https://en.wikipedia.org/wiki/Seccomp
+[did]: https://en.wikipedia.org/wiki/Defense_in_depth_(computing)

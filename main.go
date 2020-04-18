@@ -27,6 +27,8 @@ type args struct {
     check bool
     passthrough bool
     tmpdir string
+    sandbox bool
+    sandbox_debug bool
     h bool
     help bool
     verbose bool
@@ -58,6 +60,8 @@ func parse_args() *args {
     flag.StringVar(&args.tmpdir, "tmpdir", "/tmp", "directory to store message when passing it through from stdin")
     flag.BoolVar(&args.ham, "ham", false, "classify message as spam")
     flag.BoolVar(&args.spam, "spam", false, "classify message as spam")
+    flag.BoolVar(&args.sandbox, "sandbox", false, "Sandbox this program where supported (e.g. on Linux with seccomp). Only useful in combination with -check or -passthrough.")
+    flag.BoolVar(&args.sandbox_debug, "sb-debug", false, "if -sandbox is given just log violations (to syslog) for testing purposes")
     flag.BoolVar(&args.h, "h", false, "show this help screen")
     flag.BoolVar(&args.help, "help", false, "show this help screen")
     flag.BoolVar(&args.verbose, "v", false, "print some debug messages")
@@ -75,6 +79,10 @@ func parse_args() *args {
 
 func main() {
     args := parse_args()
+
+    if args.sandbox {
+        sandbox_me(args.sandbox_debug)
+    }
 
     read_size = args.read_size
 

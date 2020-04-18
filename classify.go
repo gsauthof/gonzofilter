@@ -83,6 +83,11 @@ func classify_file(in io.Reader, args *args) (bool, error) {
     if err != nil {
         return true, err
     }
+
+    if args.sandbox {
+        blacklist_open(args.sandbox_debug)
+    }
+
     ch := make(chan []byte, 100)
     cw := new_channel_writer(ch)
     cwo := new_keep_open_writer(cw)

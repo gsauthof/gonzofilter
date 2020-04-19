@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: © 2020 Georg Sauthoff <mail@gms.tf>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// // +build ignore
+// //+//build ignore
 
 package main
 
@@ -69,11 +69,11 @@ func sandbox_me(debug bool) {
         "arch_prctl"        ,
         "clone"             ,
         "close"             ,
-        "epoll_create"     ,
+        "epoll_create"      ,
         "epoll_create1"     ,
         "epoll_ctl"         ,
         "epoll_pwait"       ,
-        "exit"        ,
+        "exit"              ,
         "exit_group"        ,
         "fcntl"             ,
         "flock"             ,

@@ -9,12 +9,12 @@ import (
 )
 
 type unfold_writer struct {
-    out io.WriteCloser
-    state int
+    out    io.WriteCloser
+    state  int
 }
 func new_unfold_writer(out io.WriteCloser) *unfold_writer {
-    w := new(unfold_writer)
-    w.out = out
+    w     := new(unfold_writer)
+    w.out  = out
     return w
 }
 func (w *unfold_writer) Close() error {
@@ -27,8 +27,8 @@ func (w *unfold_writer) Close() error {
 func (w *unfold_writer) Write(block []byte) (int, error) {
     const ( OUTSIDE = iota
             IN_FOLD
-    )
-    n := len(block)
+          )
+    n       := len(block)
     newline := []byte("\n")
     for len(block) != 0 {
         switch w.state {
@@ -56,7 +56,7 @@ func (w *unfold_writer) Write(block []byte) (int, error) {
                     if _, err := w.out.Write(block[:i]); err != nil {
                         return 0, err
                     }
-                    block = block[i+1:]
+                    block   = block[i+1:]
                     w.state = IN_FOLD
                 }
             }

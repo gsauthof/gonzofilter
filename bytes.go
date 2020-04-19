@@ -20,7 +20,7 @@ func imatch_prefix(text, pattern []byte) int {
     r := 0
     for i := 0; i < l;  i++ {
         if text[i] >= byte(' ') {
-            // lower-case the text, assumning that pattern already is lowercase
+            // lower-case the text, assuming that pattern already is lowercase
             if (text[i] | 0x20) != pattern[i] { // i.e. or with 0b100000
                 break
             }
@@ -74,7 +74,7 @@ func iequal(word []byte, pattern []byte) bool {
         return false
     }
     for i := 0; i < n;  i++ {
-        // lower-case the text, assumning that pattern already is lowercase
+        // lower-case the text, assuming that pattern already is lowercase
         if (word[i] | 0x20) != pattern[i] { // i.e. or with 0b100000
             return false
         }

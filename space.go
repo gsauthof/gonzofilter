@@ -8,27 +8,27 @@ import (
 )
 
 type shrink_space_writer struct {
-    out io.WriteCloser
-    state int
-    saw_newline bool
+    out          io.WriteCloser
+    state        int
+    saw_newline  bool
 }
 func new_shrink_space_writer(out io.WriteCloser) *shrink_space_writer {
-    w := new(shrink_space_writer)
-    w.out = out
+    w     := new(shrink_space_writer)
+    w.out  = out
     return w
 }
 func (w *shrink_space_writer) Write(block []byte) (int, error) {
     const ( OUTSIDE = iota
             SKIP_SOME
-        )
-    n := len(block)
+          )
+    n     := len(block)
     space := []byte(" \n\t\r")
-    end := 0
+    end   := 0
     for len(block) != 0 {
         switch w.state {
         case OUTSIDE:
-            end = 0
-            t := block
+            end  = 0
+            t   := block
             for {
                 i := index_any(t, space)
                 if i == -1 {
@@ -37,18 +37,18 @@ func (w *shrink_space_writer) Write(block []byte) (int, error) {
                 } else {
                     if i + 1 < len(t) {
                         if is_space(t[i+1]) {
-                            end += i
-                            w.saw_newline = (t[i] == byte('\n'))
-                            w.state = SKIP_SOME
+                            end           += i
+                            w.saw_newline  = (t[i] == byte('\n'))
+                            w.state        = SKIP_SOME
                             break
                         } else {
-                            t = t[i+2:]
+                            t    = t[i+2:]
                             end += i + 2
                         }
                     } else {
-                        end += i
-                        w.saw_newline = (t[i] == byte('\n'))
-                        w.state = SKIP_SOME
+                        end           += i
+                        w.saw_newline  = (t[i] == byte('\n'))
+                        w.state        = SKIP_SOME
                         break
                     }
                 }
@@ -63,7 +63,7 @@ func (w *shrink_space_writer) Write(block []byte) (int, error) {
                 if is_space(block[i]) {
                     w.saw_newline = w.saw_newline || (block[i] == byte('\n'))
                 } else {
-                    w.state = OUTSIDE
+                    w.state       = OUTSIDE
                     break
                 }
             }

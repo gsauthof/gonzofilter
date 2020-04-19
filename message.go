@@ -9,13 +9,14 @@ import (
 )
 
 
-func write_message(in io.Reader, h io.WriteCloser, b io.WriteCloser, m io.WriteCloser) error {
+func write_message(in io.Reader, h io.WriteCloser, b io.WriteCloser,
+        m io.WriteCloser) error {
     sw := new_split_message_writer(h, b, m)
 
     // use small read size for testing
     block := make([]byte, read_size)
     for {
-        block := block[:cap(block)]
+        block  := block[:cap(block)]
         n, err := in.Read(block)
         if err != nil && err != io.EOF {
             return err
@@ -43,7 +44,8 @@ func new_content_writer(typ []byte, boundary []byte, houtP io.WriteCloser, boutP
     } else if bytes.Equal(typ, []byte("text/plain")) {
         return boutP
     } else if bytes.Equal(typ, []byte("text/html")) {
-        return new_remove_tags_writer(new_replace_entities_writer(new_shrink_space_writer(boutP)))
+        return new_remove_tags_writer(new_replace_entities_writer(
+                    new_shrink_space_writer(boutP)))
         //return new_remove_tags_writer((boutP))
     }
     return new_dev_null_writer()
@@ -60,15 +62,16 @@ type split_message_writer struct {
     eh *extract_header_writer
     m split_machine
 }
-func new_split_message_writer(houtP io.WriteCloser, boutP io.WriteCloser, moutP io.WriteCloser) *split_message_writer {
-    w := new(split_message_writer)
-    w.houtP = new_keep_open_writer(houtP)
-    w.boutP = new_keep_open_writer(boutP)
-    w.moutP = new_keep_open_writer(moutP)
+func new_split_message_writer(houtP io.WriteCloser, boutP io.WriteCloser,
+                              moutP io.WriteCloser) *split_message_writer {
+    w       := new(split_message_writer)
+    w.houtP  = new_keep_open_writer(houtP)
+    w.boutP  = new_keep_open_writer(boutP)
+    w.moutP  = new_keep_open_writer(moutP)
 
-    w.eh = new_extract_header_writer()
-    w.hout = new_unfold_writer(
-        newMultiWriteCloser(w.eh, new_header_decode_writer(w.houtP)))
+    w.eh     = new_extract_header_writer()
+    w.hout   = new_unfold_writer(
+                 newMultiWriteCloser(w.eh, new_header_decode_writer(w.houtP)))
     return w
 }
 
@@ -87,8 +90,14 @@ func (w *split_message_writer) Write(block []byte) (int, error) {
                 return 0, err
             }
             w.eh.parse()
-            debugf("parsed: content type |%s| type |%s| charset |%s| encoding |%s| boundary |%s|\n", w.eh.content_type, w.eh.typ, w.eh.charset, w.eh.transfer_encoding, w.eh.boundary)
-            w.bout = new_transfer_decode_writer(w.eh.transfer_encoding, new_charset_writer(w.eh.charset, new_content_writer(w.eh.typ, w.eh.boundary, w.houtP, w.boutP, w.moutP)))
+            debugf("parsed: content type |%s| type |%s| charset |%s|" +
+                   " encoding |%s| boundary |%s|\n",
+                   w.eh.content_type, w.eh.typ, w.eh.charset,
+                   w.eh.transfer_encoding, w.eh.boundary)
+            w.bout = new_transfer_decode_writer(w.eh.transfer_encoding,
+                          new_charset_writer(w.eh.charset,
+                               new_content_writer(w.eh.typ, w.eh.boundary,
+                                                  w.houtP, w.boutP, w.moutP)))
         case split_machine_WRITE_BODY:
             if _, err := w.bout.Write(bs); err != nil {
                 return 0, err
@@ -108,20 +117,21 @@ func (w *split_message_writer) Close() error {
 }
 
 const (
-    split_machine_WRITE_HEADER = iota
-    split_machine_SETUP_BODY
-    split_machine_WRITE_BODY
-    split_machine_MORE
-)
+        split_machine_WRITE_HEADER = iota
+        split_machine_SETUP_BODY
+        split_machine_WRITE_BODY
+        split_machine_MORE
+      )
 
 type split_machine struct {
     state int
 }
 func (w *split_machine) next(block []byte) (int, []byte, []byte) {
     const ( IN_HEADER = iota
-        IN_DELIM
-        IN_BODY_SETUP
-        IN_BODY )
+            IN_DELIM
+            IN_BODY_SETUP
+            IN_BODY
+          )
     switch w.state {
     case IN_HEADER:
         i := bytes.Index(block, []byte("\n\n"))
@@ -129,18 +139,18 @@ func (w *split_machine) next(block []byte) (int, []byte, []byte) {
             if block[len(block)-1] == byte('\n') {
                 w.state = IN_DELIM
             }
-            r := block
-            block = block[:0]
+            r     := block
+            block  = block[:0]
             return split_machine_WRITE_HEADER, r, block
         } else {
-            r := block[:i+1]
-            block = block[i+2:]
-            w.state = IN_BODY_SETUP
+            r       := block[:i+1]
+            block    = block[i+2:]
+            w.state  = IN_BODY_SETUP
             return split_machine_WRITE_HEADER, r, block
         }
     case IN_DELIM:
         if block[0] == byte('\n') {
-            block = block[1:]
+            block   = block[1:]
             w.state = IN_BODY_SETUP
         } else {
             w.state = IN_HEADER
@@ -150,8 +160,8 @@ func (w *split_machine) next(block []byte) (int, []byte, []byte) {
         w.state = IN_BODY
         return split_machine_SETUP_BODY, nil, block
     case IN_BODY:
-        r := block
-        block = block[:0]
+        r      := block
+        block   = block[:0]
         return split_machine_WRITE_BODY, r, block
     }
     return split_machine_MORE, nil, block

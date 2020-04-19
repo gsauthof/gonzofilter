@@ -28,8 +28,8 @@ func tee_words(in <-chan []byte, out1, out2 chan<- []byte) {
         for i := 0; i < 2; i++ {
             // sending something into a nil channel always blocks
             select {
-            case o1 <- x: o1 = nil
-            case o2 <- x: o2 = nil
+                case o1 <- x: o1 = nil
+                case o2 <- x: o2 = nil
             }
         }
     }

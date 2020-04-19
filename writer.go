@@ -102,7 +102,7 @@ func (w *buf_file_writer) Close() error {
     return w.f.Close()
 }
 func new_buf_file_writer(filename string) (*buf_file_writer, error) {
-    r := new(buf_file_writer)
+    r       := new(buf_file_writer)
     var err error
     r.f, err = os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
     if err != nil {
@@ -113,9 +113,9 @@ func new_buf_file_writer(filename string) (*buf_file_writer, error) {
 }
 
 func new_buf_fd_writer(f *os.File) *buf_file_writer {
-    r := new(buf_file_writer)
-    r.f = f
-    r.b = bufio.NewWriter(r.f)
+    r   := new(buf_file_writer)
+    r.f  = f
+    r.b  = bufio.NewWriter(r.f)
     return r
 }
 

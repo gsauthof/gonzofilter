@@ -17,7 +17,7 @@ func copy_stdin(tmpdir string) (*os.File, error) {
     }
     block := make([]byte, read_size)
     for {
-        block := block[:cap(block)]
+        block  := block[:cap(block)]
         n, err := os.Stdin.Read(block)
         if err != nil && err != io.EOF {
             return f, err
@@ -39,9 +39,9 @@ func copy_stdin(tmpdir string) (*os.File, error) {
 func passthrough_file(in io.Reader, is_ham bool, out io.WriteCloser) error {
     var m split_machine
     block := make([]byte, read_size)
-    hout := new_xgonzo_filter_writer(new_keep_open_writer(out))
+    hout  := new_xgonzo_filter_writer(new_keep_open_writer(out))
     for {
-        block := block[:cap(block)]
+        block  := block[:cap(block)]
         n, err := in.Read(block)
         if err != nil && err != io.EOF {
             return err
@@ -56,7 +56,7 @@ func passthrough_file(in io.Reader, is_ham bool, out io.WriteCloser) error {
                 break
             }
             action, bs, bl := m.next(block)
-            block = bl
+            block           = bl
             switch action {
             case split_machine_WRITE_HEADER:
                 if _, err := hout.Write(bs); err != nil {
@@ -85,8 +85,8 @@ func passthrough_file(in io.Reader, is_ham bool, out io.WriteCloser) error {
 }
 
 func passthrough_message(args *args) {
-    var f *os.File
-    var err error
+    var f     *os.File
+    var err   error
     if args.in_filename == "-" {
         f, err = copy_stdin(args.tmpdir)
         if err != nil {

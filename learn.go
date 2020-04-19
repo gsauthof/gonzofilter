@@ -13,14 +13,14 @@ import (
 
 func increment_key(b *bolt.Bucket, key []byte, i uint32) (bool, error) {
     fresh := false
-    n := i
-    v := b.Get(key)
+    n     := i
+    v     := b.Get(key)
     if v == nil {
         fresh = true
     } else {
-        n += binary.LittleEndian.Uint32(v)
+        n    += binary.LittleEndian.Uint32(v)
     }
-    t := make([]byte, 4)
+    t   := make([]byte, 4)
     binary.LittleEndian.PutUint32(t, n)
     err := b.Put(key, t)
     if err != nil {
@@ -69,8 +69,8 @@ func learn_message(args *args) {
     if err != nil {
         log.Fatal(err)
     }
-    ch := make(chan []byte, 100)
-    cw := new_channel_writer(ch)
+    ch  := make(chan []byte, 100)
+    cw  := new_channel_writer(ch)
     cwo := new_keep_open_writer(cw)
 
     h := new_word_split_writer(2, new_header_filter_writer(

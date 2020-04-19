@@ -27,7 +27,8 @@ type class_result struct {
     err error
 }
 
-func classify_words(db *bolt.DB, class_name []byte, ch chan []byte, vocabulary uint32, done chan class_result) {
+func classify_words(db *bolt.DB, class_name []byte, ch chan []byte,
+        vocabulary uint32, done chan class_result) {
     var prob float64
     err := db.View(func(tx *bolt.Tx) error {
         b := tx.Bucket(class_name)
@@ -88,8 +89,8 @@ func classify_file(in io.Reader, args *args) (bool, error) {
         blacklist_open(args.sandbox_debug)
     }
 
-    ch := make(chan []byte, 100)
-    cw := new_channel_writer(ch)
+    ch  := make(chan []byte, 100)
+    cw  := new_channel_writer(ch)
     cwo := new_keep_open_writer(cw)
 
     ch1 := make(chan []byte, 100)
@@ -106,7 +107,7 @@ func classify_file(in io.Reader, args *args) (bool, error) {
             new_replace_chars_writer(
             new_mark_copy_header_writer(byte('m'), cwo))))
 
-    ham_done := make(chan class_result)
+    ham_done  := make(chan class_result)
     spam_done := make(chan class_result)
 
     vocabulary, err := get_vocabulary(db)
@@ -114,8 +115,8 @@ func classify_file(in io.Reader, args *args) (bool, error) {
         return true, err
     }
 
-    go classify_words(db, []byte("ham"), ch1,  vocabulary, ham_done)
-    go classify_words(db, []byte("spam"), ch2,  vocabulary, spam_done)
+    go classify_words(db, []byte("ham"),  ch1, vocabulary, ham_done )
+    go classify_words(db, []byte("spam"), ch2, vocabulary, spam_done)
 
     if err := write_message(in, h, b, m); err != nil {
         return true, err
@@ -155,7 +156,7 @@ func classify_file(in io.Reader, args *args) (bool, error) {
 }
 
 func classify_message(args *args) {
-    in := open_input(args.in_filename)
+    in          := open_input(args.in_filename)
     is_ham, err := classify_file(in, args)
     if err != nil {
         log.Fatal(err)

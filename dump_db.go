@@ -22,7 +22,11 @@ func dump_db_class(db *bolt.DB, class_name []byte) error {
         if stat == nil {
             return errors.New("stat bucket is missing")
         }
-        fmt.Printf("%s --- word bag size: %v, vocabulary size: %v, messages: %v\n", class_name, get_uint32(stat, []byte("bag_size")), get_uint32(stat, []byte("vocabulary")), get_uint32(stat, []byte("messages")))
+        fmt.Printf("%s --- word bag size: %v, vocabulary size: %v," +
+                " messages: %v\n",
+                class_name, get_uint32(stat, []byte("bag_size")),
+                get_uint32(stat, []byte("vocabulary")),
+                get_uint32(stat, []byte("messages")))
         word_bag := b.Bucket([]byte("word_bag"))
         if word_bag == nil {
             return errors.New("word_bag bucket is missing")

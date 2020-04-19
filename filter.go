@@ -11,7 +11,7 @@ import (
 
 
 type header_filter_writer struct {
-    out io.WriteCloser
+    out   io.WriteCloser
     state int
 }
 func new_header_filter_writer(out io.WriteCloser) *header_filter_writer {
@@ -26,7 +26,7 @@ func (w *header_filter_writer) Write(word []byte) (int, error) {
             WRITE_LINE
             FILTER_RECEIVED
             FILTER_CT
-        )
+          )
     nl := []byte("\n")
     ignore_hdrs := [][]byte {
         []byte("date:"), []byte("message-id:"), []byte("references:"),
@@ -102,24 +102,24 @@ func (w *header_filter_writer) Close() error {
 }
 
 type xgonzo_filter_writer struct {
-    out io.WriteCloser
-    state int
-    partial []byte
-    off int
-    xgonzo_re *regexp.Regexp
+    out        io.WriteCloser
+    state      int
+    partial    []byte
+    off        int
+    xgonzo_re  *regexp.Regexp
 }
 func new_xgonzo_filter_writer(out io.WriteCloser) *xgonzo_filter_writer {
-    w := new(xgonzo_filter_writer)
-    w.out = out
-    w.partial = make([]byte, 0, 9)
-    w.off = 1
-    w.xgonzo_re = regexp.MustCompile("(?i)\nx-gonzo: ")
+    w           := new(xgonzo_filter_writer)
+    w.out        = out
+    w.partial    = make([]byte, 0, 9)
+    w.off        = 1
+    w.xgonzo_re  = regexp.MustCompile("(?i)\nx-gonzo: ")
     return w
 }
 func (w *xgonzo_filter_writer) Write(block []byte) (int, error) {
     const ( IN_GONZO = iota
             AFTER_GONZO
-        )
+          )
     n := len(block)
     xgonzo := []byte("\nx-gonzo: ")
     old_xgonzo := []byte("X-old-gonzo: ")
@@ -145,7 +145,7 @@ func (w *xgonzo_filter_writer) Write(block []byte) (int, error) {
         case AFTER_GONZO:
             i := -1
             if loc := w.xgonzo_re.FindIndex(block); loc != nil {
-                i = loc[0] // til we have a case-insenstive bytes.Index version
+                i = loc[0] // til we have a case-insensitive bytes.Index version
             }
             if i == -1 {
                 i := bytes.LastIndexByte(block, byte('\n'))
@@ -158,8 +158,8 @@ func (w *xgonzo_filter_writer) Write(block []byte) (int, error) {
                         w.partial = w.partial[:0]
                         w.partial = append(w.partial, block[i+1:]...)
                         w.out.Write(block[:i+1])
-                        w.off = l
-                        w.state = IN_GONZO
+                        w.off     = l
+                        w.state   = IN_GONZO
                     } else {
                         w.out.Write(block)
                     }

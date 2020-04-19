@@ -12,11 +12,11 @@ import (
 )
 
 type decode_writer struct {
-    decoder io.Reader
-    out io.WriteCloser
-    pipe_out *io.PipeReader
-    pipe_in *io.PipeWriter
-    pipe_out_done chan struct{}
+    decoder        io.Reader
+    out            io.WriteCloser
+    pipe_out       *io.PipeReader
+    pipe_in        *io.PipeWriter
+    pipe_out_done  chan struct{}
 }
 
 func (w *decode_writer) Write(p []byte) (n int, err error) {
@@ -37,17 +37,17 @@ func (w *decode_writer) Close() error {
 }
 
 func new_decode_writer(mk_decoder func(io.Reader)io.Reader, out io.WriteCloser) io.WriteCloser {
-    w := new(decode_writer)
-    w.out = out
+    w     := new(decode_writer)
+    w.out  = out
     if mk_decoder != nil {
         w.pipe_out, w.pipe_in = io.Pipe()
-        w.decoder = mk_decoder(w.pipe_out)
-        w.pipe_out_done = make(chan struct{})
+        w.decoder             = mk_decoder(w.pipe_out)
+        w.pipe_out_done       = make(chan struct{})
         go func() {
             block := make([]byte, read_size)
             for {
-                block = block[:cap(block)]
-                n, _ := w.decoder.Read(block)
+                block  = block[:cap(block)]
+                n, _  := w.decoder.Read(block)
                 if n == 0 {
                     break
                 }
@@ -63,7 +63,8 @@ func new_decode_writer(mk_decoder func(io.Reader)io.Reader, out io.WriteCloser) 
     return w
 }
 
-func new_transfer_decode_writer(encoding []byte, out io.WriteCloser) io.WriteCloser {
+func new_transfer_decode_writer(encoding []byte,
+                                out io.WriteCloser) io.WriteCloser {
     var mk_decoder func(io.Reader) io.Reader
     if bytes.Equal(encoding, []byte("base64")) {
         mk_decoder = func(r io.Reader) io.Reader {

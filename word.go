@@ -9,17 +9,17 @@ import (
 )
 
 type word_split_writer struct {
-    out io.WriteCloser
-    state int
-    partial_word []byte
-    saw_newline bool
+    out           io.WriteCloser
+    state         int
+    partial_word  []byte
+    saw_newline   bool
     // the global default might be too large for some headers like To:
-    min_word_len int
+    min_word_len  int
 }
 func new_word_split_writer(mwl int, out io.WriteCloser) *word_split_writer {
-    w := new(word_split_writer)
-    w.out = out
-    w.partial_word = make([]byte, 0, max_word_len)
+    w              := new(word_split_writer)
+    w.out           = out
+    w.partial_word  = make([]byte, 0, max_word_len)
     if mwl == -1 {
         w.min_word_len = min_word_len
     } else {
@@ -32,10 +32,10 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
             WORD_START
             IN_WORD
             IGNORE_WORD
-        )
-    n := len(block)
+          )
+    n     := len(block)
     space := []byte(" \n\t\r/'\"")
-    nl := []byte("\n")
+    nl    := []byte("\n")
     for len(block) != 0 {
         switch w.state {
         case WORD_START:
@@ -44,7 +44,7 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
                 if len(block) < max_word_len {
                     w.partial_word = w.partial_word[:0]
                     w.partial_word = append(w.partial_word, block...)
-                    w.state = IN_WORD
+                    w.state        = IN_WORD
                 }
                 block = block[:0]
             } else {
@@ -54,8 +54,8 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
                     }
                 }
                 w.saw_newline = (block[i] == byte('\n'))
-                block = block[i+1:]
-                w.state = SKIP_SPACE
+                block         = block[i+1:]
+                w.state       = SKIP_SPACE
             }
         case IN_WORD:
             i := index_any(block, space)
@@ -63,7 +63,7 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
                 if len(w.partial_word) + len(block) < max_word_len {
                     w.partial_word = append(w.partial_word, block...)
                 } else {
-                    w.state = IGNORE_WORD
+                    w.state        = IGNORE_WORD
                 }
                 block = block[:0]
             } else {
@@ -75,17 +75,17 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
                     }
                 }
                 w.saw_newline = (block[i] == byte('\n'))
-                block = block[i+1:]
-                w.state = SKIP_SPACE
+                block         = block[i+1:]
+                w.state       = SKIP_SPACE
             }
         case IGNORE_WORD:
             i := index_any(block, space)
             if i == -1 {
-                block = block[:0]
+                block         = block[:0]
             } else {
                 w.saw_newline = false
-                block = block[i:]
-                w.state = SKIP_SPACE
+                block         = block[i:]
+                w.state       = SKIP_SPACE
             }
         case SKIP_SPACE:
             var i int
@@ -93,7 +93,7 @@ func (w *word_split_writer) Write(block []byte) (int, error) {
                 if is_space(block[i]) {
                     w.saw_newline = w.saw_newline || (block[i] == byte('\n'))
                 } else {
-                    w.state = WORD_START
+                    w.state       = WORD_START
                     break
                 }
             }
@@ -119,15 +119,15 @@ func (w *word_split_writer) Close() error {
 // with the ones specified via html entities.
 // expects full words, i.e. to be chained after split words writer
 type replace_chars_writer struct {
-    out io.WriteCloser
+    out  io.WriteCloser
 }
 func new_replace_chars_writer(out io.WriteCloser) *replace_chars_writer {
     return &replace_chars_writer{out}
 }
 func (w *replace_chars_writer) Write(word []byte) (int, error) {
-    n := len(word)
+    n           := len(word)
     soft_hyphen := []byte{0xc2, 0xad}
-    empty := []byte{}
+    empty       := []byte{}
     var x []byte
     if bytes.Index(word, soft_hyphen) == -1 {
         x = word
@@ -145,14 +145,14 @@ func (w *replace_chars_writer) Close() error {
 
 
 type word_writer struct {
-    out io.WriteCloser
-    word []byte
+    out   io.WriteCloser
+    word  []byte
 }
 func new_word_writer(out io.WriteCloser) *word_writer {
-    w := new(word_writer)
-    w.out = out
-    w.word = make([]byte, 1, max_word_len)
-    w.word[0] = byte('{')
+    w         := new(word_writer)
+    w.out      = out
+    w.word     = make([]byte, 1, max_word_len)
+    w.word[0]  = byte('{')
     return w
 }
 func (w *word_writer) Write(block []byte) (int, error) {
@@ -175,13 +175,13 @@ func (w *word_writer) Close() error {
 }
 
 type nl_writer struct {
-    out io.WriteCloser
-    word []byte
+    out   io.WriteCloser
+    word  []byte
 }
 func new_nl_writer(out io.WriteCloser) *nl_writer {
-    w := new(nl_writer)
-    w.out = out
-    w.word = make([]byte, 0, max_word_len)
+    w      := new(nl_writer)
+    w.out   = out
+    w.word  = make([]byte, 0, max_word_len)
     return w
 }
 func (w *nl_writer) Write(block []byte) (int, error) {

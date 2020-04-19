@@ -15,8 +15,8 @@ import (
 
 
 type charset_writer struct {
-    out io.WriteCloser
-    transformer *transform.Writer
+    out          io.WriteCloser
+    transformer  *transform.Writer
 }
 
 // implements io.Writer interface
@@ -40,30 +40,30 @@ func (w *charset_writer) Close() error {
 
 // the lookup function lower-cases the charset input string
 var charset_trans_map = map[string](func()*encoding.Decoder){
-    "latin1": charmap.ISO8859_1.NewDecoder,
-    "latin2": charmap.ISO8859_2.NewDecoder,
-    "latin9": charmap.ISO8859_15.NewDecoder,
-    "iso-8859-1": charmap.ISO8859_1.NewDecoder,
-    "iso-8859-2": charmap.ISO8859_2.NewDecoder,
-    "iso-8859-15": charmap.ISO8859_15.NewDecoder,
-    "iso8859-15": charmap.ISO8859_15.NewDecoder,
-    "windows-1250": charmap.Windows1250.NewDecoder,
-    "windows-1251": charmap.Windows1251.NewDecoder,
-    "windows-1252": charmap.Windows1252.NewDecoder,
-    "windows-1255": charmap.Windows1255.NewDecoder,
-    "windows-1256": charmap.Windows1256.NewDecoder,
-    "windows-1258": charmap.Windows1258.NewDecoder,
-    "cp1252": charmap.Windows1252.NewDecoder,
-    "ibm852": charmap.CodePage852.NewDecoder,
-    "koi8-r": charmap.KOI8R.NewDecoder,
-    "iso-2022-jp": japanese.ISO2022JP.NewDecoder,
-    "gbk": simplifiedchinese.GBK.NewDecoder,
+    "latin1"       : charmap.ISO8859_1.NewDecoder     ,
+    "latin2"       : charmap.ISO8859_2.NewDecoder     ,
+    "latin9"       : charmap.ISO8859_15.NewDecoder    ,
+    "iso-8859-1"   : charmap.ISO8859_1.NewDecoder     ,
+    "iso-8859-2"   : charmap.ISO8859_2.NewDecoder     ,
+    "iso-8859-15"  : charmap.ISO8859_15.NewDecoder    ,
+    "iso8859-15"   : charmap.ISO8859_15.NewDecoder    ,
+    "windows-1250" : charmap.Windows1250.NewDecoder   ,
+    "windows-1251" : charmap.Windows1251.NewDecoder   ,
+    "windows-1252" : charmap.Windows1252.NewDecoder   ,
+    "windows-1255" : charmap.Windows1255.NewDecoder   ,
+    "windows-1256" : charmap.Windows1256.NewDecoder   ,
+    "windows-1258" : charmap.Windows1258.NewDecoder   ,
+    "cp1252"       : charmap.Windows1252.NewDecoder   ,
+    "ibm852"       : charmap.CodePage852.NewDecoder   ,
+    "koi8-r"       : charmap.KOI8R.NewDecoder         ,
+    "iso-2022-jp"  : japanese.ISO2022JP.NewDecoder    ,
+    "gbk"          : simplifiedchinese.GBK.NewDecoder ,
 }
 
 
 func new_charset_writer(charset []byte, out io.WriteCloser) *charset_writer {
-    w := new(charset_writer)
-    w.out = out
+    w     := new(charset_writer)
+    w.out  = out
     trans := charset_trans_map[string(bytes.ToLower(charset))]
     if trans != nil {
         //trans.Reset()

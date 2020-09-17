@@ -1,5 +1,6 @@
 %bcond_without srpm
 
+%undefine _missing_build_ids_terminate_build
 
 Name:       gonzofilter
 Version:    0.5.0

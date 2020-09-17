@@ -9,7 +9,7 @@ URL:        https://github.com/gsauthof/gonzofilter
 License:    GPLv3+
 Source:     https://example.org/gonzofilter.tar
 
-
+BuildRequires: golang-bin
 BuildRequires: golang-etcd-bbolt-devel
 BuildRequires: golang-x-sys-devel
 BuildRequires: golang-x-text-devel

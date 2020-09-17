@@ -3,7 +3,7 @@
 
 // yes, the below is a go build magic pragma for conditional builds
 
-// +build !linux
+// +build !linux !sandbox
 
 package main
 

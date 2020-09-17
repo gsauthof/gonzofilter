@@ -160,21 +160,20 @@ They can be installed with `go get` or the distribution's package
 manager. For example, on Fedora:
 
     # dnf install golang-etcd-bbolt-devel \
-                  golang-golangorg-text-devel \
-                  golang-github-golang-sys-devel
+                  golang-x-sys-devel \
+                  golang-x-text-devel
 
 For the sandboxing feature (`-sandbox`) it also requires
 [github.com/seccomp/libseccomp-golang][scg] greater than version
-0.9.1. On Non-Linux systems this dependency should be
-automatically skipped. If you also want to skip it under Linux
-you can disable it like this:
+0.9.1. Sandboxing support is disabled by default, to enabled it
+build with:
 
-    $ mv seccomp_linux.go seccomp_linux.gone
-    $ sed -i '/^\/\/ +build !linux/d' seccomp.go
+
+    $ GOPATH=$HOME/go:/usr/share/gocode go build -tags sandbox
 
 Tested on:
 
-- Fedora 29, 31 (compile+execute)
+- Fedora 29, 31 (compile+execute), 32 (execute)
 - CentOS 7 (execute, the kernel/libseccomp is too old for the sandbox
   support, though)
 

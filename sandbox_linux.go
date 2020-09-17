@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: © 2020 Georg Sauthoff <mail@gms.tf>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// //+//build ignore
+// +build sandbox
 
 package main
 

@@ -239,6 +239,33 @@ e.g.:
 
     gonzofilter -passthrough -sandbox
 
+### SELinux
+
+This repository also contains an SELinux policy module for
+gonzofilter in the `selinux` subdirectory. It can be activated
+with the following steps:
+
+    make -f /usr/share/selinux/devel/Makefile gonzofilter.pp
+    semodule -i gonzofilter.pp
+
+In comparison with the seccomp sandboxing, SELinux allows more
+fine-grained control over file accesses. For example, it's clear
+that gonzofilter needs to open some files, read some and
+read/write some others. Thus the involved syscalls need to be
+allowed.  This is also what the SELinux policy does, but it does
+so while restricting those accesses to files that are labeled
+with specific labels. Meaning that the gonzofilter process can
+write to the hamspam database and `/tmp` but not to any other
+location.
+
+Although coming up with a minimal white-list of syscalls is kind
+of tedious, implementing the sandbox approach is arguably more
+straight forward than creating a SELinux policy module. At least
+the SELinux learning process is more involved.
+
+
+### Further Considerations
+
 When using a mail filter that is written in a memory unsafe
 language (such as C), one has to ask herself how well it is
 reviewed and tested for security issues. Perhaps it got some

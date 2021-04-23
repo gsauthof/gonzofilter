@@ -3,7 +3,7 @@
 %undefine _missing_build_ids_terminate_build
 
 Name:       gonzofilter
-Version:    0.5.0
+Version:    0.5.1
 Release:    1%{?dist}
 Summary:    Bayes classifying spam mail filter
 URL:        https://github.com/gsauthof/gonzofilter

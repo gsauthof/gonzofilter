@@ -341,6 +341,20 @@ func (w *extract_header_writer) parse() {
     if len(w.typ) == 0 {
         w.typ = append(w.typ, []byte("text/plain")...)
     }
+
+    // work around broken mailers that send MIME but set a bogus encoding, cf.:
+    // > Encoding considerations: Multipart content-types cannot have encodings.
+    // (https://tools.ietf.org/html/rfc2387#section-2)
+    // > The Content-Transfer-Encoding of a multipart type must always be "7bit",
+    // > "8bit" or "binary" to avoid the complications that would be posed by
+    // > multiple levels of decoding.
+    // (https://en.wikipedia.org/wiki/MIME#Multipart_messages)
+    if len(w.boundary) > 0 && len(w.transfer_encoding) > 0 &&
+       !bytes.Equal(w.transfer_encoding, []byte("7bit"))   &&
+       !bytes.Equal(w.transfer_encoding, []byte("8bit"))   &&
+       !bytes.Equal(w.transfer_encoding, []byte("binary")) {
+            w.transfer_encoding = w.transfer_encoding[:0]
+    }
 }
 
 

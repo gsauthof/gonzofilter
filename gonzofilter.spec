@@ -4,7 +4,7 @@
 
 Name:       gonzofilter
 Version:    0.5.2
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    Bayes classifying spam mail filter
 URL:        https://github.com/gsauthof/gonzofilter
 License:    GPLv3+
@@ -26,6 +26,13 @@ Bayes classifying spam mail filter
 # TODO remove GOPATH when we don't want to support old
 # module-ignorant Go versions, anymore ...
 %build
+
+# On Fedora 32, not all dependencies come with a proper go.mod,
+# thus, this disables module build support
+%if 0%{?fedora} < 33
+rm go.mod
+%endif
+
 GOPROXY=off GOPATH=$HOME/go:/usr/share/gocode   go build
 
 %install

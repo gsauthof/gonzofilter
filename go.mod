@@ -15,4 +15,14 @@ replace (
 	go.etcd.io/bbolt => /usr/share/gocode/src/go.etcd.io/bbolt
 	golang.org/x/sys => /usr/share/gocode/src/golang.org/x/sys
 	golang.org/x/text => /usr/share/gocode/src/golang.org/x/text
+// indirect dependencies:
+	golang.org/x/tools => /usr/share/gocode/src/golang.org/x/tools
+	github.com/yuin/goldmark => /usr/share/gocode/src/github.com/yuin/goldmark
+	golang.org/x/mod => /usr/share/gocode/src/golang.org/x/mod
+	golang.org/x/net => /usr/share/gocode/src/golang.org/x/net
+	golang.org/x/sync => /usr/share/gocode/src/golang.org/x/sync
+	golang.org/x/xerrors => /usr/share/gocode/src/golang.org/x/xerrors
+	golang.org/x/crypto => /usr/share/gocode/src/golang.org/x/crypto
+	golang.org/x/term => /usr/share/gocode/src/golang.org/x/term
+//replace-this
 )

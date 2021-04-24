@@ -7,7 +7,6 @@ import (
     "bytes"
     "encoding/base64"
     "io"
-    "log"
     "mime/quotedprintable"
 )
 
@@ -47,16 +46,30 @@ func new_decode_writer(mk_decoder func(io.Reader)io.Reader, out io.WriteCloser) 
             block := make([]byte, read_size)
             for {
                 block  = block[:cap(block)]
-                n, _  := w.decoder.Read(block)
-                if n == 0 {
-                    break
+                n, decode_err := w.decoder.Read(block)
+                // i.e. even if decoder encounters an error it might return some partial decode, as well!
+                // we thus check for it after writing the preceding decoder result ...
+                if n > 0 {
+                    block = block[:n]
+                    if _, err := w.out.Write(block); err != nil {
+                        debugf("failed to write pipe result: %v", err)
+                        w.pipe_out.CloseWithError(err)
+                        break;
+                    }
                 }
-                block = block[:n]
-                if _, err := w.out.Write(block); err != nil {
-                    log.Fatal(err)
+                // signal write-on-closed-pipe in case writer tries to write
+                // some trailing bytes - otherwise it could deadlock
+                if decode_err == io.EOF || n == 0 {
+                    w.pipe_out.Close()
+                    break;
+                }
+                if decode_err != nil {
+                    debugf("decode_writer decoder read error: %v (n=%d)", decode_err, n)
+                    w.pipe_out.CloseWithError(decode_err)
+                    break;
                 }
             }
-            w.pipe_out_done <- struct{}{}
+            w.pipe_out_done <- struct{}{} // i.e. an empty struct
             close(w.pipe_out_done)
         }()
     }

@@ -9,8 +9,8 @@ import (
 )
 
 
-func write_message(in io.Reader, h io.WriteCloser, b io.WriteCloser,
-        m io.WriteCloser) error {
+func write_messageP(in io.Reader, h io.WriteCloser, b io.WriteCloser,
+        m io.WriteCloser, pedantic bool) error {
     sw := new_split_message_writer(h, b, m)
 
     // use small read size for testing
@@ -26,13 +26,27 @@ func write_message(in io.Reader, h io.WriteCloser, b io.WriteCloser,
             break
         }
         if _, err := sw.Write(block); err != nil {
-            return err
+            debugf("write_message split_message_writer write failed: %v", err)
+            if pedantic {
+                return err
+            } else {
+                // when classifying messages it makes sense to ignore write errors
+                // since we want to work with what we already have
+                // (think: a decoding error in some mime-attachment was preceded
+                //         by many spammy words in the header/other parts)
+                return nil
+            }
         }
     }
     if err := sw.Close(); err != nil {
         return err
     }
     return nil
+}
+
+func write_message(in io.Reader, h io.WriteCloser, b io.WriteCloser,
+        m io.WriteCloser) error {
+    return write_messageP(in, h, b, m, false)
 }
 
 func new_content_writer(typ []byte, boundary []byte, houtP io.WriteCloser, boutP io.WriteCloser, moutP io.WriteCloser) io.WriteCloser {

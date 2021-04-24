@@ -101,7 +101,9 @@ func passthrough_message(args *args) {
 
     is_ham, err := classify_file(f, args)
     if err != nil {
-        log.Fatal(err)
+        debugf("classification failed: %v", err)
+        // we ignore this error since we don't want to stop the passthrough just
+        // because something went wrong during classification ...
     }
     if _, err := f.Seek(0, 0); err != nil {
         log.Fatal(err)

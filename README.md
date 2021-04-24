@@ -163,6 +163,33 @@ manager. For example, on Fedora:
                   golang-x-sys-devel \
                   golang-x-text-devel
 
+
+### Go Modules
+
+Or with more recent Go versions that support Go modules, it's just:
+
+    $ go build -mod=readonly
+    $ go test  -mod=readonly -v
+
+Depending on your system you might need to modify the `go.mod`
+file, e.g. change the `replace` directive or remove it
+completely.
+
+The `-mod=readonly` switch disables automatic changes of the
+`go.mod` file in Go versions less than 1.16. (In Go 1.16
+this behavior is the default.)
+
+To make sure that locally available dependencies aren't attempted
+to be fetched over the net one can set the `GOPROXY` environment
+variable to `off`.
+
+On Go version less than 1.17, module support can be disabled by
+either setting the `GO111MODULE` environment variable to `off` or
+by setting it to `auto` and removing the `go.mod` file.
+
+
+### Sandboxing
+
 For the sandboxing feature (`-sandbox`) it also requires
 [github.com/seccomp/libseccomp-golang][scg] greater than version
 0.9.1. Sandboxing support is disabled by default, to enabled it
@@ -173,7 +200,7 @@ build with:
 
 Tested on:
 
-- Fedora 29, 31 (compile+execute), 32 (execute)
+- Fedora 29 to 33 (compile and execute)
 - CentOS 7 (execute, the kernel/libseccomp is too old for the sandbox
   support, though)
 

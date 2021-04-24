@@ -3,7 +3,7 @@
 %undefine _missing_build_ids_terminate_build
 
 Name:       gonzofilter
-Version:    0.5.1
+Version:    0.5.2
 Release:    1%{?dist}
 Summary:    Bayes classifying spam mail filter
 URL:        https://github.com/gsauthof/gonzofilter
@@ -23,15 +23,17 @@ Bayes classifying spam mail filter
 %autosetup -n gonzofilter
 %endif
 
+# TODO remove GOPATH when we don't want to support old
+# module-ignorant Go versions, anymore ...
 %build
-GOPATH=$HOME/go:/usr/share/gocode go build
+GOPROXY=off GOPATH=$HOME/go:/usr/share/gocode   go build
 
 %install
 mkdir -p %{buildroot}/usr/bin
 cp gonzofilter %{buildroot}/usr/bin
 
 %check
-GOPATH=$HOME/go:/usr/share/gocode go test -v
+GOPROXY=off GOPATH=$HOME/go:/usr/share/gocode   go test -v
 
 %files
 /usr/bin/gonzofilter

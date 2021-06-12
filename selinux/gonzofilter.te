@@ -63,6 +63,7 @@ allow gonzofilter_t postfix_pipe_t:fifo_file write;
 allow gonzofilter_t sysfs_t:file { open read };
 
 allow gonzofilter_t tmp_t:dir write;
+allow gonzofilter_t tmp_t:file open;
 allow gonzofilter_t tmp_t:file write;
 
 allow gonzofilter_t user_home_dir_t:dir search;

@@ -3,8 +3,8 @@
 %undefine _missing_build_ids_terminate_build
 
 Name:       gonzofilter
-Version:    0.5.2
-Release:    2%{?dist}
+Version:    0.5.3
+Release:    1%{?dist}
 Summary:    Bayes classifying spam mail filter
 URL:        https://github.com/gsauthof/gonzofilter
 License:    GPLv3+
@@ -27,20 +27,15 @@ Bayes classifying spam mail filter
 # module-ignorant Go versions, anymore ...
 %build
 
-# On Fedora 32, not all dependencies come with a proper go.mod,
-# thus, this disables module build support
-%if 0%{?fedora} < 33
-rm go.mod
-%endif
 
-GOPROXY=off GOPATH=$HOME/go:/usr/share/gocode   go build
+GO111MODULE=off GOPATH=$HOME/go:/usr/share/gocode   go build
 
 %install
 mkdir -p %{buildroot}/usr/bin
 cp gonzofilter %{buildroot}/usr/bin
 
 %check
-GOPROXY=off GOPATH=$HOME/go:/usr/share/gocode   go test -v
+GO111MODULE=off GOPATH=$HOME/go:/usr/share/gocode   go test -v
 
 %files
 /usr/bin/gonzofilter

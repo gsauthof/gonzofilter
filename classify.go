@@ -78,9 +78,16 @@ func get_vocabulary(db *bolt.DB) (uint32, error) {
     return vocabulary, err
 }
 
-func classify_file(in io.Reader, args *args) (bool, error) {
+func open_wo_creat(name string, flags int, mode os.FileMode) (*os.File, error) {
+    return os.OpenFile(name, flags & (^os.O_CREATE), mode)
+}
 
-    db, err := bolt.Open(args.db_filename, 0666, nil)
+func classify_file(in io.Reader, args *args) (bool, error) {
+    opts          := *bolt.DefaultOptions
+    opts.ReadOnly  =  true
+    opts.OpenFile  =  open_wo_creat
+
+    db, err := bolt.Open(args.db_filename, 0666, &opts)
     if err != nil {
         return true, err
     }

@@ -1,5 +1,5 @@
 %bcond_without srpm
-
+%global debug_package %{nil}
 %undefine _missing_build_ids_terminate_build
 
 Name:       gonzofilter
